@@ -2,7 +2,7 @@ import pandas as pd
 import sqlite3
 
 def get_sleep_minutes():
-    con = sqlite3.connect("Project-Fitbit/fitbit_database.db")
+    con = sqlite3.connect("Aimee3\Project-Fitbit/fitbit_database.db")
     query = "SELECT Id, COUNT(*) as duration_minutes FROM minute_sleep WHERE value = 1 GROUP BY Id"
     df_user_sleep = pd.read_sql_query(query, con)
     
@@ -13,7 +13,7 @@ def get_sleep_minutes():
     return df_user_sleep
 
 def classify_user():
-    con = sqlite3.connect("Project-Fitbit/fitbit_database.db")
+    con = sqlite3.connect("Aimee3\Project-Fitbit/fitbit_database.db")
     activity_query = "SELECT Id, SUM(VeryActiveMinutes + FairlyActiveMinutes + LightlyActiveMinutes) as total_active_minutes FROM daily_activity GROUP BY Id"
     df_activity = pd.read_sql_query(activity_query, con)
     df_activity['Id'] = df_activity['Id'].astype(str)

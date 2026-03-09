@@ -1,9 +1,9 @@
 import pandas as pd
 import sqlite3
 
+
 def get_fitbit_report():
     con = sqlite3.connect("fitbit_database.db")
-
     sleep_query = "SELECT Id, logId, COUNT(*) as duration_minutes FROM minute_sleep GROUP BY logId"
     df_sleep = pd.read_sql_query(sleep_query, con)
     df_sleep['Id'] = df_sleep['Id'].astype(str)
@@ -114,33 +114,35 @@ conn = sqlite3.connect("fitbit_database.db")
 bins   = [0, 4, 8, 12, 16, 20, 24]
 labels = ["0-4", "4-8", "8-12", "12-16", "16-20", "20-24"]
 
-# STEPS
+def plot_steps_by_block(conn, bins=bins, labels=labels):
+    # load hourly steps table from the database
+    steps_df = pd.read_sql_query("SELECT ActivityHour, StepTotal FROM hourly_steps", conn)
 
-# load hourly steps table from the database
-steps_df = pd.read_sql_query("SELECT ActivityHour, StepTotal FROM hourly_steps", conn)
+    # convert ActivityHour column to datetime format
+    steps_df["ActivityHour"] = pd.to_datetime(steps_df["ActivityHour"], format="%m/%d/%Y %I:%M:%S %p")
 
-# convert ActivityHour column to datetime format
-steps_df["ActivityHour"] = pd.to_datetime(steps_df["ActivityHour"], format="%m/%d/%Y %I:%M:%S %p")
+    # extract the hour from the datetime
+    steps_df["Hour"] = steps_df["ActivityHour"].dt.hour
 
-# extract the hour from the datetime
-steps_df["Hour"] = steps_df["ActivityHour"].dt.hour
+    # assign each row to a 4-hour block based on the hour
+    steps_df["Block"] = pd.cut(steps_df["Hour"], bins=bins, labels=labels, right=False)
 
-# assign each row to a 4-hour block based on the hour
-steps_df["Block"] = pd.cut(steps_df["Hour"], bins=bins, labels=labels, right=False)
+    # compute the average steps per block across all participants
+    steps_avg = steps_df.groupby("Block", observed=True)["StepTotal"].mean()
 
-# compute the average steps per block across all participants
-steps_avg = steps_df.groupby("Block", observed=True)["StepTotal"].mean()
+    # plot the results as a bar plot
+    plt.figure(figsize=(9, 5))
+    plt.bar(steps_avg.index, steps_avg.values, color="#4C9BE8", edgecolor="white", width=0.6)
+    plt.title("Average Steps per 4-Hour Block", fontsize=14, fontweight="bold")
+    plt.xlabel("Time Block (hours)", fontsize=11)
+    plt.ylabel("Average Steps", fontsize=11)
+    plt.grid(axis="y", linestyle="--", alpha=0.4)
+    plt.tight_layout()
+    plt.savefig("steps_by_block.png", dpi=150)
+    plt.show()
 
-# plot the results as a bar plot
-plt.figure(figsize=(9, 5))
-plt.bar(steps_avg.index, steps_avg.values, color="#4C9BE8", edgecolor="white", width=0.6)
-plt.title("Average Steps per 4-Hour Block", fontsize=14, fontweight="bold")
-plt.xlabel("Time Block (hours)", fontsize=11)
-plt.ylabel("Average Steps", fontsize=11)
-plt.grid(axis="y", linestyle="--", alpha=0.4)
-plt.tight_layout()
-plt.savefig("steps_by_block.png", dpi=150)
-plt.show()
+# call it like this:
+plot_steps_by_block(conn)
 
 # CALORIES
 

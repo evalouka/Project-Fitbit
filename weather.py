@@ -185,13 +185,13 @@ def barplot_activity_temperature_and_precip():
        plt.xticks(rotation=90)
        plt.show()
 
-unique_id = daily_activity_df["Id"].drop_duplicates()
-for value in unique_id.head(2):
-       scatterplot_per_id(value)
+# unique_id = daily_activity_df["Id"].drop_duplicates()
+# for value in unique_id.head(3):
+#        scatterplot_per_id(value)
 
-scatterplot_means()
-
-barplot_activity_temperature_and_precip()
+# scatterplot_means()
+#
+# barplot_activity_temperature_and_precip()
 
 
 

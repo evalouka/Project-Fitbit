@@ -6,26 +6,38 @@ from datetime import datetime
 import matplotlib.dates as mdates
 
 def get_global_activity():
-    con = sqlite3.connect("fitbit_database.db")
-    classify_query = "SELECT Id, SUM(VeryActiveMinutes + FairlyActiveMinutes + LightlyActiveMinutes) as total_active_minutes FROM daily_activity GROUP BY Id"
-    df_activity = pd.read_sql_query(classify_query, con)
-    df_activity['Id'] = df_activity['Id'].astype(str)
+    #returns how many active minutes each user has
+    con = sqlite3.connect(r"C:\Users\jonge\PycharmProjects\Data Engineering\Aimee3\Project-Fitbit\fitbit_database.db")
+    
+    act_query = """SELECT Id, 
+    COUNT(DISTINCT substr(ActivityDate, 1, 10)) as activity_day_count, 
+    SUM(VeryActiveMinutes + FairlyActiveMinutes + LightlyActiveMinutes) as total_active_minutes 
+    FROM daily_activity GROUP BY Id"""
+    df_activity = pd.read_sql_query(act_query, con)
 
+    if not df_activity.empty:
+        df_activity['Id'] = pd.to_numeric(df_activity['Id'], errors= 'coerce')
+        df_activity['Id'] = df_activity['Id'].astype('Int64').astype(str)
     con.close()
+
     return df_activity
 
 def get_user_activity(user_id):
 
-    con = sqlite3.connect("fitbit_database.db")
-    query = "SELECT Id, SUM(VeryActiveMinutes + FairlyActiveMinutes + LightlyActiveMinutes) as total_active_minutes FROM daily_activity WHERE Id = ? GROUP BY Id"
-    df_activity = pd.read_sql_query(query, con)
+    con = sqlite3.connect(r"C:\Users\jonge\PycharmProjects\Data Engineering\Aimee3\Project-Fitbit\fitbit_database.db")
+    query = "SELECT Id, ActivityDate, SUM(VeryActiveMinutes + FairlyActiveMinutes + LightlyActiveMinutes) as active_minutes FROM daily_activity WHERE Id = ? GROUP BY ActivityDate"
     df_activity = pd.read_sql_query(query, con, params=(user_id,))
+
+    if not df_activity.empty:
+        df_activity['Id'] = pd.to_numeric(df_activity['Id'], errors= 'coerce')
+        df_activity['Id'] = df_activity['Id'].astype('Int64').astype(str)
 
     con.close()
     return df_activity
 
 def get_daily_activity_all_users():
-    con = sqlite3.connect("fitbit_database.db")
+    #returns the daily active minutes for each user at each day
+    con = sqlite3.connect(r"C:\Users\jonge\PycharmProjects\Data Engineering\Aimee3\Project-Fitbit\fitbit_database.db")
     query = "SELECT Id, ActivityDate, (VeryActiveMinutes + FairlyActiveMinutes + LightlyActiveMinutes) as daily_active_minutes FROM daily_activity"
     df = pd.read_sql_query(query, con)
     con.close()
@@ -55,7 +67,8 @@ def classify_user(user_id):
     else:
         category = "Heavy user"
 
-    return f"You have {activity_count} activity entries over the last 2 months, therefore you are a {category}"
+    print(f"You have {activity_count} activity entries over the last 2 months, therefore you are a {category}")
+    return activity_count
 
 def bar_average_activity_week():
 
@@ -129,6 +142,3 @@ def plot_user_activity_4_weeks(user_id):
     plt.tight_layout()
     plt.show()
 
-print(get_daily_activity_all_users())
-print(get_global_activity())
-#plot_user_activity_4_weeks(1844505072)

@@ -29,5 +29,3 @@ def plot_user_calories(Id):
     plt.grid(True, axis='y', linestyle='-', alpha=0.5)
     plt.tight_layout()
     plt.show()
-
-plot_user_calories(1503960366)

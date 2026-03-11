@@ -2,29 +2,91 @@ import pandas as pd
 import sqlite3
 import matplotlib.pyplot as plt
 import scipy.stats as stats
-from sleep import get_sleep_minutes, get_activity_global
+import numpy as np
+from sleep import get_global_sleep_minutes, get_users_sleep_minutes
+from activity_logs import get_global_activity, get_user_activity
 
-def get_activity_individual(user_id):
+def get_global_sleep_averages():
+    df_sleep = get_global_sleep_minutes()
+    
+    if not df_sleep.empty:
+        df_sleep['avg_daily_sleep'] = df_sleep['sleep_minutes'] / df_sleep['sleep_day_count']
+        df_sleep['Id'] = pd.to_numeric(df_sleep['Id'], errors='coerce').astype('Int64').astype(str)
+        
+    return df_sleep[['Id', 'avg_daily_sleep']]
 
-    con = sqlite3.connect("fitbit_database.db")
-    query = "SELECT Id, SUM(VeryActiveMinutes + FairlyActiveMinutes + LightlyActiveMinutes) as total_active_minutes FROM daily_activity WHERE Id = ? GROUP BY Id"
-    df_activity = pd.read_sql_query(query, con)
-    df_activity = pd.read_sql_query(query, con, params=(user_id,))
+def get_global_activity_averages():
 
-    con.close()
-    return df_activity
+    df_act = get_global_activity()
+    
+    if not df_act.empty:
+        df_act['avg_daily_activity'] = df_act['total_active_minutes'] / df_act['activity_day_count']
+        df_act['Id'] = pd.to_numeric(df_act['Id'], errors='coerce').astype('Int64').astype(str)
+        
+    return df_act[['Id', 'avg_daily_activity']]
 
-def sleep_activity_corr_ind(user_id):
+def global_sleep_activity_corr():
 
-    df_sleep = get_sleep_minutes(user_id)
-    df_active = get_activity_individual(user_id)
-
-    df_combined = pd.merge(df_sleep, df_active, on="Id")
+    df_sleep_avg = get_global_sleep_averages()
+    df_act_avg = get_global_activity_averages()
+    df_combined = pd.merge(df_sleep_avg, df_act_avg, on="Id")
 
     if df_combined.empty:
-        return "No matching data found between sleep and activity tables."
+        return "No matching data found."
+    
+    df_combined = df_combined.sort_values(by='avg_daily_sleep', ascending=True)
+    df_combined = df_combined.reset_index(drop=True)
+    
+    corr_sleep_to_act = df_combined['avg_daily_sleep'].corr(df_combined['avg_daily_activity'])
+    corr_act_to_sleep = df_combined['avg_daily_activity'].corr(df_combined['avg_daily_sleep'])
 
-    correlation = df_combined['total_active_minutes'].corr(df_combined['duration_minutes'])
+    print(f"Correlation: {corr_sleep_to_act:.2f}")
+    print(f"Correlation: {corr_act_to_sleep:.2f}")
+
+    if corr_sleep_to_act > 0.7:
+        print("Strong positive relationship")
+    elif corr_sleep_to_act > 0.3:
+        print("Moderate positive relationship")
+    else:
+        print("Weak or no relationship")
+
+    plt.figure(figsize=(10, 6))
+    plt.scatter(df_combined['avg_daily_sleep'], df_combined['avg_daily_activity'], alpha=0.5, color='blue')
+
+    m, b = np.polyfit(df_combined['avg_daily_sleep'], df_combined['avg_daily_activity'], 1)
+    x_range = np.array([df_combined['avg_daily_sleep'].min(), df_combined['avg_daily_sleep'].max()])
+    y_trend = m * x_range + b
+
+    plt.plot(x_range, y_trend, color='red', linewidth=2, label="Trend Line")
+    
+    plt.title(f"Sleep vs Activity (Correlation: {corr_sleep_to_act:.2f})")
+    plt.xlabel("Sleep minutes")
+    plt.ylabel("Active Minutes")
+    plt.grid(True)
+    plt.show()
+
+    return df_combined
+
+def individual_sleep_activity_corr(user_id):
+
+    df_sleep = get_users_sleep_minutes(user_id)
+    df_active = get_user_activity(user_id)
+
+    user_id_str = str(user_id)
+    
+    df_sleep['get_date'] = pd.to_datetime(df_sleep['clean_date'])
+    df_active['get_date'] = pd.to_datetime(df_active['ActivityDate'])
+
+    df_combined = pd.merge(df_sleep, df_active, on="get_date")
+
+    if df_combined.empty:
+        print(f"No matching dates found for user {user_id_str}.")
+        return None
+
+    correlation = df_combined['active_minutes'].corr(df_combined['duration_minutes'])
+    
+    print(f"--- Analysis for User {user_id_str} ---")
+    print(f"Days of data: {len(df_combined)}")
     print(f"Correlation Coefficient: {correlation:.2f}")
 
     if correlation > 0.7:
@@ -34,17 +96,20 @@ def sleep_activity_corr_ind(user_id):
     else:
         print("Weak or no relationship")
 
-    plt.figure(figsize=(8, 6))
+    plt.figure(figsize=(10, 6))
+    plt.scatter(df_combined['active_minutes'], df_combined['duration_minutes'], color='blue', alpha=0.7)
 
-    stats.probplot(df_combined['total_active_minutes'], dist="norm", plot=plt)
-    
-    plt.title("QQ-Plot: Checking Normality of Active Minutes")
-    plt.xlabel("Theoretical Quantiles")
-    plt.ylabel("Ordered Values (Active Minutes)")
+    m, b = np.polyfit(df_combined['active_minutes'], df_combined['duration_minutes'], 1)
+    plt.plot(df_combined['active_minutes'], m*df_combined['active_minutes'] + b, color='red')
+
+    plt.title(f"Individual Correlation: Sleep vs Activity (User {user_id_str})")
+    plt.xlabel("Daily Active Minutes")
+    plt.ylabel("Daily Sleep Minutes")
     plt.grid(True)
+    plt.show()
 
-    return df_combined
+    return correlation
 
-#def sleep_activity_corr_global():
-
-sleep_activity_corr_ind(1503960366)
+#individual_sleep_activity_corr(2347167796)
+#individual_sleep_activity_corr(4319703577)
+global_sleep_activity_corr()

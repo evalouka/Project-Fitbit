@@ -7,7 +7,7 @@ import matplotlib.dates as mdates
 
 def get_global_activity():
     #returns how many active minutes each user has
-    con = sqlite3.connect(r"C:\Users\jonge\PycharmProjects\Data Engineering\Aimee3\Project-Fitbit\fitbit_database.db")
+    con = sqlite3.connect("fitbit_database.db")
     
     act_query = """SELECT Id, 
     COUNT(DISTINCT substr(ActivityDate, 1, 10)) as activity_day_count, 
@@ -37,7 +37,7 @@ def get_user_activity(user_id):
 
 def get_daily_activity_all_users():
     #returns the daily active minutes for each user at each day
-    con = sqlite3.connect(r"C:\Users\jonge\PycharmProjects\Data Engineering\Aimee3\Project-Fitbit\fitbit_database.db")
+    con = sqlite3.connect("fitbit_database.db")
     query = "SELECT Id, ActivityDate, (VeryActiveMinutes + FairlyActiveMinutes + LightlyActiveMinutes) as daily_active_minutes FROM daily_activity"
     df = pd.read_sql_query(query, con)
     con.close()
@@ -142,3 +142,9 @@ def plot_user_activity_4_weeks(user_id):
     plt.tight_layout()
     plt.show()
 
+def get_best_users():
+    data_df = get_global_activity()
+
+    print(data_df['total_active_minutes'].head(5))
+
+get_best_users()

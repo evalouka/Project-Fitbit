@@ -11,16 +11,14 @@ import streamlit as st
 connection = sqlite3.connect("fitbit_database.db")
 
 
-def mean_heart_rate_per_day(df, Id):
+def mean_heart_rate_per_day(df, Id, view_by):
     heart_rate_df = df[df["Id"] == Id].copy()
 
     if heart_rate_df.empty:
         st.write("No heart rate data available for this user")
         return
 
-    buttons = st.radio("View by", ["Hour", "Day"], horizontal = True, key = "hr_mean", index =1)
-
-    if buttons == "Hour":
+    if view_by == "Hour":
         heart_rate_df["Time"] = pd.to_datetime(heart_rate_df["Time"]).dt.hour
         xlabel = "Hour of day"
         title = f"Mean heart rate per hour for user {Id}"
@@ -95,7 +93,11 @@ def heart_rate_vs_activity(df1, df2, df3, Id):
     ax.tick_params(colors="white")
     ax.yaxis.label.set_color("white")
     ax.title.set_color("white")
-    fig.colorbar(scatter, ax= ax, label= "Average intensity")
+    color_bar = fig.colorbar(scatter, ax= ax, label= "Average intensity")
+    color_bar.ax.yaxis.set_tick_params(color = "white")
+    color_bar.ax.yaxis.label.set_color("white")
+    color_bar.ax.tick_params(colors = "white")
+    color_bar.outline.set_edgecolor("white")
     fig.tight_layout()
     ax.set_frame_on(False)
     fig.patch.set_alpha(0)
@@ -114,7 +116,7 @@ def heart_rate_vs_activity(df1, df2, df3, Id):
     #Print summary
     # print(hourly_activity_df[["StepTotal", "Value", "AverageIntensity"]].describe())
 
-def HR_zones(df, Id):
+def HR_zones(df, Id, view_by):
     #Create heart rate dataframe for given Id
     heart_rate_df = df[df["Id"] == Id].copy()
 
@@ -122,9 +124,7 @@ def HR_zones(df, Id):
         st.write("No heart rate data available for this user")
         return
 
-    buttons = st.radio("View by", ["Hour", "Day"], horizontal=True, key="hr_zones", index = 1)
-
-    if buttons == "Hour":
+    if view_by == "Hour":
         heart_rate_df["Time"] = pd.to_datetime(heart_rate_df["Time"]).dt.hour
         xlabel = "Hour of day"
         title = f"HR zones per hour for user {Id}"
@@ -228,7 +228,7 @@ def mean_HR_per_group():
 
 
 
-def mean_HR_per_group_compared_to_id(df, Id):
+def mean_HR_per_group_compared_to_id(df, Id, selected):
     #Get report to know the class of each Id
     report = classify_users()
     report["Id"] = report["Id"].astype(str)
@@ -261,12 +261,6 @@ def mean_HR_per_group_compared_to_id(df, Id):
     #Plot the data for each group
     colors = {"Light": cm.get_cmap("Blues")(0.3), "Moderate": cm.get_cmap("Blues")(0.55), "Heavy": cm.get_cmap("Blues")(0.8)}
 
-    unique_id = hourly_mean_HR_per_user[["Id", "Class"]].drop_duplicates()
-    selected = st.multiselect("Compare to", ["Light", "Moderate", "Heavy"], default ="Heavy")
-    heavy_count = (unique_id["Class"] == "Heavy").sum()
-    moderate_count = (unique_id["Class"] == "Moderate").sum()
-    light_count = (unique_id["Class"] == "Light").sum()
-    st.caption(f"Based on " + str(heavy_count) + " heavy user(s), " + str(moderate_count) + " moderate user(s), and " + str(light_count) + " light user(s)")
     for class_name, group in hourly_mean_HR.groupby("Class"):
         if class_name in selected:
             ax.plot(group["Hour"], group["Value"], label = class_name, alpha = 0.4, color= colors[class_name])
@@ -284,12 +278,18 @@ def mean_HR_per_group_compared_to_id(df, Id):
     ax.tick_params(colors="white")
     ax.yaxis.label.set_color("white")
     ax.title.set_color("white")
-
-
     ax.legend()
     ax.patch.set_alpha(0)
     fig.patch.set_alpha(0)
     st.pyplot(fig)
+
+    unique_id = hourly_mean_HR_per_user[["Id", "Class"]].drop_duplicates()
+    heavy_count = (unique_id["Class"] == "Heavy").sum()
+    moderate_count = (unique_id["Class"] == "Moderate").sum()
+    light_count = (unique_id["Class"] == "Light").sum()
+    st.caption(
+        f"Based on {heavy_count}  heavy user(s), {moderate_count} moderate user(s), and {light_count} "
+        f"light user(s)")
 
     #Print summary
     # print(hourly_mean_HR.groupby("Class")["Value"].describe())

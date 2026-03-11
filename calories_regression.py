@@ -7,8 +7,6 @@ import matplotlib.cm as cm
 from sympy.physics.units import minutes
 
 def regression_calories(df, Id):
-    #Find data belonging to the given ID and make a scatterplot
-
     # Store calories in dependent variably y
     y = df["Calories"]
 

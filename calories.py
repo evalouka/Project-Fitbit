@@ -22,7 +22,7 @@ def plot_user_calories(Id):
     plt.plot(user_data['ActivityDate'], user_data['Calories'], marker='o', color='skyblue')
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%b %d'))
     
-    plt.title(f"Calories Burned per day")
+    plt.title(f"Calories burned per day")
     plt.xlabel("Date")
     plt.ylabel("Calories burned")
     plt.xticks(rotation=45)

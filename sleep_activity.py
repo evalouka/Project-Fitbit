@@ -6,8 +6,8 @@ import numpy as np
 from sleep import get_global_sleep_minutes, get_users_sleep_minutes
 from activity_logs import get_global_activity, get_user_activity
 
-def get_global_sleep_averages():
-    df_sleep = get_global_sleep_minutes()
+def get_global_sleep_averages(con):
+    df_sleep = get_global_sleep_minutes(con)
     
     if not df_sleep.empty:
         df_sleep['avg_daily_sleep'] = df_sleep['sleep_minutes'] / df_sleep['sleep_day_count']
@@ -15,9 +15,9 @@ def get_global_sleep_averages():
         
     return df_sleep[['Id', 'avg_daily_sleep']]
 
-def get_global_activity_averages():
+def get_global_activity_averages(con):
 
-    df_act = get_global_activity()
+    df_act = get_global_activity(con)
     
     if not df_act.empty:
         df_act['avg_daily_activity'] = df_act['total_active_minutes'] / df_act['activity_day_count']
@@ -25,10 +25,10 @@ def get_global_activity_averages():
         
     return df_act[['Id', 'avg_daily_activity']]
 
-def global_sleep_activity_corr():
+def global_sleep_activity_corr(con):
 
-    df_sleep_avg = get_global_sleep_averages()
-    df_act_avg = get_global_activity_averages()
+    df_sleep_avg = get_global_sleep_averages(con)
+    df_act_avg = get_global_activity_averages(con)
     df_combined = pd.merge(df_sleep_avg, df_act_avg, on="Id")
 
     if df_combined.empty:
@@ -67,10 +67,10 @@ def global_sleep_activity_corr():
 
     return df_combined
 
-def individual_sleep_activity_corr(user_id):
+def individual_sleep_activity_corr(user_id, con):
 
-    df_sleep = get_users_sleep_minutes(user_id)
-    df_active = get_user_activity(user_id)
+    df_sleep = get_users_sleep_minutes(user_id, con)
+    df_active = get_user_activity(user_id, con)
 
     user_id_str = str(user_id)
     

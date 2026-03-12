@@ -8,6 +8,9 @@ from heart_rate import HR_zones
 from weather import scatterplot_means, scatterplot_per_id
 from calories_regression import regression_calories
 from minutes_distribution import stacked_bar_chart_for_id
+from activity_logs import plot_global_activity_4_weeks, plot_user_activity_4_weeks, get_5_best_days, plot_user_activity_4_weeks, get_5_best_users
+from sleep_activity import individual_sleep_activity_corr
+from calories import plot_user_vs_global_calories
 
 st.set_page_config(
 page_title = "Fitbit Dashboard",
@@ -115,7 +118,7 @@ with general_tab:
 
     row1_col1, row1_col2 = st.columns(2)
     with row1_col1:
-        st.write("Plot total activity over four weeks for all users (Aimee)")
+        st.write(plot_global_activity_4_weeks(connection)) #Aimee
     with row1_col2:
         st.write("Ten thousand steps (Eva)")
 
@@ -123,7 +126,7 @@ with general_tab:
     with row2_col1:
         st.write("Plot steps over day by blocks of four (Rojin)")
     with row2_col2:
-        st.write("Top 5 of something (Aimee)")
+        st.write("Print 5 best users, or whatever you like (Eva)")
 
     row3_col1, row3_col2 = st.columns(2)
     with row3_col2:
@@ -155,18 +158,21 @@ with id_tab:
 
             row1_col1, row1_col2 = st.columns(2)
             with row1_col1:
-                st.write("Plot total activity over four weeks for user (Aimee)")
+                st.write(plot_user_activity_4_weeks(Id, connection)) #Aimee
             with row1_col2:
-                st.write("Sleep activity correlation (Aimee)")
+                st.write(individual_sleep_activity_corr(Id, connection)) #Aimee
 
             row2_col1, row2_col2 = st.columns(2)
             with row2_col1:
                 view_by = st.radio("View by", ["Hour", "Day"], horizontal=True, key="hr_mean_general_tab", index=1)
+                st.write("Median heart rate by hour/day (Naomi)")
+             
             row3_col1, row3_col2 = st.columns(2)
             with row3_col1:
                 mean_heart_rate_per_day(heart_rate_df, Id, view_by)
             with row3_col2:
                 st.write("Top 5 best activity dates (Aimee)")
+                
 
         if section == "Activity":
             m1, m2, m3, m4 = st.columns(4)
@@ -177,7 +183,7 @@ with id_tab:
 
             row1_col1, row1_col2 = st.columns(2)
             with row1_col1:
-                st.write("Plot total activity over four weeks for user (Aimee)")
+                st.write(plot_user_activity_4_weeks(Id, connection)) #Aimee
             with row1_col2:
                 st.write("Activity steps per blocks of hours (Rojin)")
 
@@ -197,7 +203,7 @@ with id_tab:
 
             row1_col1, row1_col2 = st.columns(2)
             with row1_col1:
-                st.write("Sleep activity correlation (Aimee)")
+                individual_sleep_activity_corr(Id, connection) #Aimee
             with row1_col2:
                 st.write("Sleep activity sedentary minutes correlation (Rojin)")
 
@@ -205,7 +211,11 @@ with id_tab:
             with row2_col1:
                 st.write("Sleep per block (Rojin)")
             with row2_col2:
-                st.write("Average sleep per day/week (Aimee)")
+                st.write("Average sleep per day/week (Aimee)") #Aimee
+            
+            row3_col1, row3_col2 = st.columns(2)
+            with row3_col2:
+                view_by = st.radio("View by", ["Day", "Week"], horizontal=True, key="sleep_min", index=1)
 
 
         if section == "Heart rate":
@@ -235,6 +245,10 @@ with id_tab:
             with row3_col2:
                 mean_HR_per_group_compared_to_id(heart_rate_df, Id, selected)
 
+            row4_col1, row4_col2, st.colums(2)
+            with row4_col1:
+                st.write("Average hear rate of the day vs sleep of that day (Aimee)")
+
         if section == "Calories":
             m1, m2, m3, m4 = st.columns(4)
             m1.metric("Metric1", f"Something (Rojin)")
@@ -253,7 +267,7 @@ with id_tab:
                 st.write("Eva do you have something about calories?")
 
             with row2_col2:
-                st.write("Something else about calories? (Aimee)")
+                plot_user_vs_global_calories(Id, connection) #Aimee
 
         if section == "Intensity":
             m1, m2, m3, m4 = st.columns(4)
@@ -273,6 +287,26 @@ with id_tab:
                 st.write("Heart rate vs intensity (Eva)")
             with row2_col2:
                 st.write("Average intensity by day of week (Rojin)")
+
+        if section == "Weight":
+            m1, m2, m3, m4 = st.columns(4)
+            m1.metric("Metric1", f"Something")
+            m2.metric("Metric2", f"Something")
+            m3.metric("Metric3", f"Something")
+            m4.metric("3", f"Something")
+
+            row1_col1, row1_col2 = st.columns(2)
+            with row1_col1:
+                st.write("BMI for user (Eva)")
+            with row1_col2:
+                st.write("BMI compared to others/general (Eva)")
+            
+            row2_col1, row2_col2 = st.columns(2)
+            with row2_col1:
+                st.write("Weight for user (in KG and in Pounds)(Eva)")
+        
+
+
 
 
 

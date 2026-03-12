@@ -5,74 +5,70 @@ import numpy as np
 import statsmodels.api as sm
 import streamlit as st
 import matplotlib.cm as cm
+import plotly.express as px
 
-
-def scatterplot_per_id(df1, df2, Id):
+def scatterplot_per_id(df1, df2, Id, choose):
        merged_df = pd.merge(df1, df2, left_on="datetime", right_on="ActivityDate")
 
        # Set y to dependent variable TotalSteps for regression
        y = merged_df["TotalSteps"]
 
+       if choose == "Precipitation":
+              #Compute mean TotalSteps for each precipitation point
+              x = "precip"
+              xlabel = "Precipitation (mm)"
+              title = "Scatterplot of Precipitation vs TotalSteps"
+
+       else:
+              x = "temp"
+              xlabel = "Temperature (Celsius)"
+              title = "Scatterplot of Temperature vs TotalSteps"
+
+
        # Make regression model for Precipitation vs TotalSteps
-       x_precip = merged_df["precip"]
+       x_reg = merged_df[x]
        id_dummies = pd.get_dummies(merged_df["Id"], drop_first=True)
-       x_precip = pd.concat([x_precip, id_dummies], axis=1)
-       x_precip = sm.add_constant(x_precip)
-       result_precip = sm.OLS(y, x_precip).fit()
+       x_reg = pd.concat([x_reg, id_dummies], axis=1)
+       x_reg = sm.add_constant(x_reg)
+       result = sm.OLS(y, x_reg).fit()
 
        #Collect the data for given Id
        id_df = merged_df[merged_df["Id"] == Id]
 
-       #Create 1x3 grid for three scatterplots
-       fig, ax = plt.subplots(1, 2)
-
-       #Scatterplot for Precipitation vs TotalSteps
-       ax[0].scatter(id_df["precip"], id_df["TotalSteps"], color="lightskyblue")
 
        # Find regression line for Precipitation vs TotalSteps
-       base_precip = result_precip.params["const"]
-       id_variable_precip = result_precip.params.get(Id, 0.0)
-       intercept_precip = base_precip + id_variable_precip
-       slope_precip = result_precip.params["precip"]
-       x_line_precip = np.linspace(id_df["precip"].min(), id_df["precip"].max(), 100)
-       y_line_precip = intercept_precip + slope_precip * x_line_precip
+       base = result.params["const"]
+       id_variable = result.params.get(Id, 0.0)
+       intercept = base + id_variable
+       slope = result.params[x]
+       x_line = np.linspace(id_df[x].min(), id_df[x].max(), 100)
+       y_line = intercept + slope * x_line
 
-       #Plot the regression line for Precipitation vs TotalSteps and add title and labels for axes
-       ax[0].plot(x_line_precip, y_line_precip, color = "royalblue")
-       ax[0].set_title("Precipitation vs TotalSteps")
-       ax[0].set_ylabel("Total steps")
-       ax[0].set_xlabel("Precipitation (mm)")
+       fig = px.scatter(id_df,
+                        x=x,
+                        y="TotalSteps",
+                        opacity=0.2,
+                        color_discrete_sequence=[px.colors.sequential.Blues[2]],
+                        title=title)
 
+       fig.add_scatter(x=x_line,
+                       y=y_line,
+                       mode="lines",
+                       line=dict(color=px.colors.sequential.Blues[7]),
+                       name="Regression")
 
-       #Scatterplot for Temperature vs TotalSteps
-       ax[1].scatter(id_df["temp"], id_df["TotalSteps"], color="lightskyblue")
+       fig.update_layout(height=500,
+                         paper_bgcolor="rgba(0,0,0,0)",
+                         plot_bgcolor="rgba(0,0,0,0)",
+                         xaxis_title=xlabel,
+                         yaxis_title="Total Steps",
+                         font_color="white")
 
-       #Make regression model for Temperature vs TotalSteps
-       x_temp = merged_df["temp"]
-       x_temp = pd.concat([x_temp, id_dummies], axis=1)
-       x_temp = sm.add_constant(x_temp)
-       result_temp = sm.OLS(y, x_temp).fit()
+       st.plotly_chart(fig)
 
-       #Find regression line for Temperature vs TotalSteps
-       base_temp = result_temp.params["const"]
-       id_variable_temp = result_temp.params.get(Id, 0.0)
-       intercept_temp = base_temp + id_variable_temp
-       slope_temp = result_temp.params["temp"]
-       x_line_temp = np.linspace(id_df["temp"].min(), id_df["temp"].max(), 100)
-       y_line_temp = intercept_temp + slope_temp * x_line_temp
-
-       #Plot regression line for Temperature vs TotalSteps and add title and labels for axes
-       ax[1].plot(x_line_temp, y_line_temp, color = "royalblue")
-       ax[1].set_title("Temperature vs TotalSteps")
-       ax[1].set_ylabel("Total steps")
-       ax[1].set_xlabel("Temperature (Celsius)")
-
-
-       plt.tight_layout()
-       plt.show()
 
 def scatterplot_means(df1, df2, choose):
-       #Merge the dataframes
+       # Merge the dataframes
        df2["ActivityDate"] = pd.to_datetime(df2["ActivityDate"])
        merged_df = pd.merge(df1, df2, left_on="datetime", right_on="ActivityDate")
        merged_df["Id"] = merged_df["Id"].astype(float)
@@ -80,74 +76,58 @@ def scatterplot_means(df1, df2, choose):
        # Set y to dependent variable TotalSteps for regression
        y = merged_df["TotalSteps"]
 
-       fig, ax = plt.subplots()
 
        if choose == "Precipitation":
               #Compute mean TotalSteps for each precipitation point
-              means_precip = merged_df.groupby("precip")["TotalSteps"].mean().reset_index()
-
-              #Scatterplot of precipitation vs TotalSteps
-              ax.scatter(merged_df["precip"], merged_df["TotalSteps"], color= cm.get_cmap("Blues")(0.2), alpha=0.2, label = "Precipitation vs TotalSteps")
-
-              #Scatterplot of precipitation vs mean TotalSteps
-              ax.scatter(means_precip["precip"], means_precip["TotalSteps"], color= cm.get_cmap("Blues")(0.7), alpha = 1, label = "Precipitation vs TotalSteps means")
-
-
-              # Make regression model for Precipitation vs TotalSteps
-              x_precip = merged_df["precip"]
-              x_precip = sm.add_constant(x_precip)
-              result_precip = sm.OLS(y, x_precip).fit()
-
-              intercept_precip = result_precip.params["const"]
-              slope_precip = result_precip.params["precip"]
-              x_line_precip = np.linspace(merged_df["precip"].min(), merged_df["precip"].max(), 100)
-              y_line_precip = intercept_precip + slope_precip * x_line_precip
-
-              #Add labels, title, and legend
-              ax.tick_params(axis ="x", rotation = 90)
-              ax.plot(x_line_precip, y_line_precip, color= cm.get_cmap("Blues")(0.9))
-              ax.set_xlabel("Precipitation (mm)")
-              ax.set_ylabel("Total Steps")
-              ax.set_title("Scatterplot of Precipitation vs TotalSteps")
-              ax.legend()
+              x = "precip"
+              xlabel = "Precipitation (mm)"
+              title = "Scatterplot of Precipitation vs TotalSteps"
 
        else:
+              x = "temp"
+              xlabel = "Temperature (Celsius)"
+              title = "Scatterplot of Temperature vs TotalSteps"
               # Compute mean TotalSteps for each temperature point
-              means_temp = merged_df.groupby("temp")["TotalSteps"].mean().reset_index()
 
-              # Scatterplot of temperature vs TotalSteps
-              ax.scatter(merged_df["temp"], merged_df["TotalSteps"], color= cm.get_cmap("Blues")(0.2), alpha = 0.2, label = "Temperature vs TotalSteps")
+       means = merged_df.groupby(x)["TotalSteps"].mean().reset_index()
 
-              # Scatterplot of temperature vs mean TotalSteps
-              ax.scatter(means_temp["temp"], means_temp["TotalSteps"], color= cm.get_cmap("Blues")(0.7), alpha = 1, label = "Temperature vs TotalSteps means")
+       x_reg = merged_df[x]
+       x_reg = sm.add_constant(x_reg)
+       result = sm.OLS(y,x_reg).fit()
 
-              x_temp = merged_df["temp"]
-              x_temp = sm.add_constant(x_temp)
-              result_temp = sm.OLS(y, x_temp).fit()
+       # Find regression line for Temperature vs TotalSteps
+       intercept = result.params["const"]
+       slope = result.params[x]
+       x_line = np.linspace(merged_df[x].min(), merged_df[x].max(), 100)
+       y_line = intercept + slope * x_line
 
-              # Find regression line for Temperature vs TotalSteps
-              intercept_temp = result_temp.params["const"]
-              slope_temp = result_temp.params["temp"]
-              x_line_temp = np.linspace(merged_df["temp"].min(), merged_df["temp"].max(), 100)
-              y_line_temp = intercept_temp + slope_temp * x_line_temp
+       fig = px.scatter(merged_df,
+                        x=x,
+                        y= "TotalSteps",
+                        opacity= 0.2,
+                        color_discrete_sequence=[px.colors.sequential.Blues[2]],
+                        title= title)
 
-              # Add labels, title, and legend
-              ax.tick_params(axis = "x", rotation=90)
-              ax.plot(x_line_temp, y_line_temp, color= cm.get_cmap("Blues")(0.9))
-              ax.set_xlabel("Temperature (Celsius)")
-              ax.set_ylabel("Total Steps")
-              ax.set_title("Scatterplot of Temperature vs TotalSteps")
-              ax.legend()
+       fig.add_scatter(x = means[x],
+                       y = means["TotalSteps"],
+                       mode = "markers",
+                       marker= dict(color= px.colors.sequential.Blues[6]),
+                       name = "Means")
 
-       ax.set_frame_on(False)
-       fig.patch.set_alpha(0)
-       fig.tight_layout()
-       ax.xaxis.label.set_color("white")
-       ax.tick_params(colors="white")
-       ax.yaxis.label.set_color("white")
-       ax.title.set_color("white")
-       st.pyplot(fig)
+       fig.add_scatter(x= x_line,
+                       y = y_line,
+                       mode ="lines",
+                       line= dict(color= px.colors.sequential.Blues[7]),
+                       name = "Regression")
 
+       fig.update_layout(height = 500,
+                         paper_bgcolor="rgba(0,0,0,0)",
+                         plot_bgcolor="rgba(0,0,0,0)",
+                         xaxis_title=xlabel,
+                         yaxis_title="Total Steps",
+                         font_color="white")
+
+       st.plotly_chart(fig)
 
 
 def barplot_activity_temperature_and_precip():
@@ -187,14 +167,6 @@ def barplot_activity_temperature_and_precip():
        plt.xticks(rotation=90)
        plt.show()
 
-# unique_id = daily_activity_df["Id"].drop_duplicates()
-# for value in unique_id.head(3):
-#        scatterplot_per_id(weather, daily_activity_df, value)
-
-
-
-#
-# barplot_activity_temperature_and_precip()
 
 
 
@@ -203,3 +175,50 @@ def barplot_activity_temperature_and_precip():
 
 
 
+       # #Create 1x3 grid for three scatterplots
+       # fig, ax = plt.subplots(1, 2)
+       #
+       # #Scatterplot for Precipitation vs TotalSteps
+       # ax[0].scatter(id_df["precip"], id_df["TotalSteps"], color="lightskyblue")
+       #
+       # # Find regression line for Precipitation vs TotalSteps
+       # base_precip = result_precip.params["const"]
+       # id_variable_precip = result_precip.params.get(Id, 0.0)
+       # intercept_precip = base_precip + id_variable_precip
+       # slope_precip = result_precip.params["precip"]
+       # x_line_precip = np.linspace(id_df["precip"].min(), id_df["precip"].max(), 100)
+       # y_line_precip = intercept_precip + slope_precip * x_line_precip
+       #
+       # #Plot the regression line for Precipitation vs TotalSteps and add title and labels for axes
+       # ax[0].plot(x_line_precip, y_line_precip, color = "royalblue")
+       # ax[0].set_title("Precipitation vs TotalSteps")
+       # ax[0].set_ylabel("Total steps")
+       # ax[0].set_xlabel("Precipitation (mm)")
+       #
+       #
+       # #Scatterplot for Temperature vs TotalSteps
+       # ax[1].scatter(id_df["temp"], id_df["TotalSteps"], color="lightskyblue")
+       #
+       # #Make regression model for Temperature vs TotalSteps
+       # x_temp = merged_df["temp"]
+       # x_temp = pd.concat([x_temp, id_dummies], axis=1)
+       # x_temp = sm.add_constant(x_temp)
+       # result_temp = sm.OLS(y, x_temp).fit()
+       #
+       # #Find regression line for Temperature vs TotalSteps
+       # base_temp = result_temp.params["const"]
+       # id_variable_temp = result_temp.params.get(Id, 0.0)
+       # intercept_temp = base_temp + id_variable_temp
+       # slope_temp = result_temp.params["temp"]
+       # x_line_temp = np.linspace(id_df["temp"].min(), id_df["temp"].max(), 100)
+       # y_line_temp = intercept_temp + slope_temp * x_line_temp
+       #
+       # #Plot regression line for Temperature vs TotalSteps and add title and labels for axes
+       # ax[1].plot(x_line_temp, y_line_temp, color = "royalblue")
+       # ax[1].set_title("Temperature vs TotalSteps")
+       # ax[1].set_ylabel("Total steps")
+       # ax[1].set_xlabel("Temperature (Celsius)")
+       #
+       #
+       # plt.tight_layout()
+       # plt.show()

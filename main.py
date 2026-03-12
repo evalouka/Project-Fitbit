@@ -5,8 +5,9 @@ from user_classification import classify_users
 import pandas as pd
 import sqlite3
 from heart_rate import HR_zones
-from weather import scatterplot_means
+from weather import scatterplot_means, scatterplot_per_id
 from calories_regression import regression_calories
+from minutes_distribution import stacked_bar_chart_for_id
 from activity_logs import plot_global_activity_4_weeks, plot_user_activity_4_weeks, get_5_best_days, plot_user_activity_4_weeks, get_5_best_users
 from sleep_activity import individual_sleep_activity_corr
 from calories import plot_user_vs_global_calories
@@ -74,28 +75,52 @@ def load_weather_data():
     weather["datetime"] = pd.to_datetime(weather["datetime"])
     return weather
 
+@st.cache_data
+def load_activity_minutes_data():
+    query_daily_activity = f"SELECT Id, ActivityDate, VeryActiveMinutes, FairlyActiveMinutes, LightlyActiveMinutes, SedentaryMinutes FROM daily_activity"
+    cursor = connection.cursor()
+    cursor.execute(query_daily_activity)
+    rows = cursor.fetchall()
+    activity_minutes_df = pd.DataFrame(rows, columns=[x[0] for x in cursor.description]).copy()
+    activity_minutes_df["Id"] = activity_minutes_df["Id"].astype(str)
+    return activity_minutes_df
+
 
 heart_rate_df = load_hr_data()
 daily_activity_df = load_daily_activity_data()
 hourly_activity_df = load_hourly_activity()
 intensity_df = load_hourly_intensity()
 weather_df = load_weather_data()
+activity_minutes_df = load_activity_minutes_data()
 
 general_tab, id_tab = st.tabs(["General", "Id"])
 
 
 with general_tab:
     m1, m2, m3, m4 = st.columns(4)
-    m1.metric("Metric1", f"Something")
-    m2.metric("Metric2", f"Something")
-    m3.metric("Metric3", f"Something")
-    m4.metric("3", f"Something")
+    st.markdown("""
+        <style>
+        [data-testid="stMetricLabel"] p {
+            font-weight: bold ; 
+        }
+        [data-testid="stMetricValue"] {
+            font-size: 20px;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+
+    m1.metric("Number of users", f"{len(load_unique_id())}")
+    m2.metric("Average activity", f"{daily_activity_df['TotalSteps'].mean():.0f} steps")
+    m3.metric("Date range", f"{daily_activity_df.sort_values(by= 'ActivityDate')['ActivityDate'].iloc[0]}"
+                            f" - {daily_activity_df.sort_values(by= 'ActivityDate')['ActivityDate'].iloc[-1]} ")
+    m4.metric("Average sleep", f"Aimee")
 
     row1_col1, row1_col2 = st.columns(2)
     with row1_col1:
         st.write(plot_global_activity_4_weeks(connection)) #Aimee
     with row1_col2:
-        st.write("Pie Chart with light, heavy, moderate (Aimee)")
+        st.write("Ten thousand steps (Eva)")
 
     row2_col1, row2_col2 = st.columns(2)
     with row2_col1:
@@ -105,7 +130,7 @@ with general_tab:
 
     row3_col1, row3_col2 = st.columns(2)
     with row3_col2:
-        choose = st.radio("Choose", ["Precipitation", "Temperature"], horizontal = True)
+        choose = st.radio("Choose", ["Precipitation", "Temperature"], horizontal = True, key = "weather_general")
 
 
     row4_col1, row4_col2 = st.columns(2)
@@ -124,10 +149,12 @@ with id_tab:
     with col2:
         if section == "General":
             m1, m2, m3, m4 = st.columns(4)
-            m1.metric("You are", f" light/heavy/moderate user")
-            m2.metric("Metric2", f"Something")
-            m3.metric("Metric3", f"Something")
-            m4.metric("3", f"Something")
+            id_class = classify_users()[classify_users()['Id'].astype(str) == Id]['Class'].values[0]
+            m1.metric("You are a", id_class+ " user")
+            m2.metric("Average activity", f"{daily_activity_df[daily_activity_df['Id']== Id]['TotalSteps'].mean():.0f} steps")
+            m3.metric("Date range", f"{daily_activity_df[daily_activity_df['Id']== Id].sort_values(by= 'ActivityDate')['ActivityDate'].iloc[0].strftime('%Y/%m/%d')}"
+                            f" - {daily_activity_df[daily_activity_df['Id']== Id].sort_values(by= 'ActivityDate')['ActivityDate'].iloc[-1].strftime('%Y/%m/%d')} ")
+            m4.metric("Average sleep", f"Aimee")
 
             row1_col1, row1_col2 = st.columns(2)
             with row1_col1:
@@ -137,16 +164,22 @@ with id_tab:
 
             row2_col1, row2_col2 = st.columns(2)
             with row2_col1:
+                view_by = st.radio("View by", ["Hour", "Day"], horizontal=True, key="hr_mean_general_tab", index=1)
                 st.write("Median heart rate by hour/day (Naomi)")
-            with row2_col2:
-                st.write(get_5_best_days(Id, connection)) #Aimee
+             
+            row3_col1, row3_col2 = st.columns(2)
+            with row3_col1:
+                mean_heart_rate_per_day(heart_rate_df, Id, view_by)
+            with row3_col2:
+                st.write("Top 5 best activity dates (Aimee)")
+                
 
         if section == "Activity":
             m1, m2, m3, m4 = st.columns(4)
-            m1.metric("Metric1", f"Something")
-            m2.metric("Metric2", f"Something")
-            m3.metric("Metric3", f"Something")
-            m4.metric("3", f"Something")
+            m1.metric("Metric1", f"Something (Naomi)")
+            m2.metric("Metric2", f"Something (Naomi)")
+            m3.metric("Metric3", f"Something (Naomi)")
+            m4.metric("3", f"Something (Naomi)")
 
             row1_col1, row1_col2 = st.columns(2)
             with row1_col1:
@@ -158,15 +191,15 @@ with id_tab:
             with row2_col1:
                 st.write("Plot total activity per day of the week compared to general (Aimee)")
             with row2_col2:
-                st.write("Something with veryactive, lightlyactive, etc. minutes (Naomi)")
+                stacked_bar_chart_for_id(activity_minutes_df, Id)
 
 
         if section == "Sleep":
             m1, m2, m3, m4 = st.columns(4)
-            m1.metric("Metric1", f"Something")
-            m2.metric("Metric2", f"Something")
-            m3.metric("Metric3", f"Something")
-            m4.metric("3", f"Something")
+            m1.metric("Metric1", f"Something (Aimee)")
+            m2.metric("Metric2", f"Something (Aimee)")
+            m3.metric("Metric3", f"Something (Aimee)")
+            m4.metric("3", f"Something (Aimee)")
 
             row1_col1, row1_col2 = st.columns(2)
             with row1_col1:
@@ -218,10 +251,10 @@ with id_tab:
 
         if section == "Calories":
             m1, m2, m3, m4 = st.columns(4)
-            m1.metric("Metric1", f"Something")
-            m2.metric("Metric2", f"Something")
-            m3.metric("Metric3", f"Something")
-            m4.metric("3", f"Something")
+            m1.metric("Metric1", f"Something (Rojin)")
+            m2.metric("Metric2", f"Something (Rojin)")
+            m3.metric("Metric3", f"Something (Rojin)")
+            m4.metric("3", f"Something (Rojin)")
 
             row1_col1, row1_col2 = st.columns(2)
             with row1_col1:
@@ -238,10 +271,10 @@ with id_tab:
 
         if section == "Intensity":
             m1, m2, m3, m4 = st.columns(4)
-            m1.metric("Metric1", f"Something")
-            m2.metric("Metric2", f"Something")
-            m3.metric("Metric3", f"Something")
-            m4.metric("3", f"Something")
+            m1.metric("Metric1", f"Something (Rojin)")
+            m2.metric("Metric2", f"Something (Rojin)")
+            m3.metric("Metric3", f"Something (Rojin) ")
+            m4.metric("3", f"Something (Rojin)")
 
             row1_col1, row1_col2 = st.columns(2)
             with row1_col1:

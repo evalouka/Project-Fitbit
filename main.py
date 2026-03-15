@@ -1,3 +1,4 @@
+
 import streamlit as st
 import os
 from heart_rate import mean_heart_rate_per_day, HR_zones_per_group, heart_rate_vs_activity, mean_HR_per_group_compared_to_id
@@ -6,6 +7,13 @@ import pandas as pd
 import sqlite3
 from heart_rate import HR_zones
 from calories_regression import regression_calories
+from step import (
+    plot_steps_by_block_general,
+    plot_steps_by_block_per_id,
+    plot_sleep_sedentary_correlation,
+    plot_sleep_by_block_per_id,
+    plot_calories_by_block_per_id
+)
 
 st.set_page_config(
 page_title = "Fitbit Dashboard",
@@ -74,7 +82,7 @@ with general_tab:
     with col1:
         HR_zones_per_group(heart_rate_df)
     with col2:
-        st.write("Other plots here")
+        plot_steps_by_block_general()
 
 with id_tab:
     col1, col2 = st.columns([1,6])
@@ -86,9 +94,10 @@ with id_tab:
         if section == "General":
             st.write("General data here")
         if section == "Activity":
-            st.write("Activity here")
+            plot_steps_by_block_per_id(Id)
         if section == "Sleep":
-            st.write("Sleep here")
+            plot_sleep_sedentary_correlation(Id)
+            plot_sleep_by_block_per_id(Id)
         if section == "Heart rate":
             m1, m2, m3, m4 = st.columns(4)
             m1.metric("Sample size", f"{len(heart_rate_df[heart_rate_df['Id']== Id])} records")
@@ -111,5 +120,6 @@ with id_tab:
             col1, col2 = st.columns(2)
             with col1:
                 regression_calories(daily_activity_df, Id)
-
+            with col2:
+                plot_calories_by_block_per_id(Id)
 

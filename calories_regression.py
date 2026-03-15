@@ -5,10 +5,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.cm as cm
 from sympy.physics.units import minutes
+import plotly.express as px
 
 def regression_calories(df, Id):
-    #Find data belonging to the given ID and make a scatterplot
-
     # Store calories in dependent variably y
     y = df["Calories"]
 
@@ -33,29 +32,40 @@ def regression_calories(df, Id):
         st.write("No calories data available")
         return
 
-    fig, ax = plt.subplots(figsize=(5,4))
-    ax.scatter(df_id["TotalSteps"], df_id["Calories"], color= cm.get_cmap("Blues")(0.35))
 
-    #Copmute base intercept and the id variable to calculate the intercept for a given ID
+    # Copmute base intercept and the id variable to compute the intercept for a given ID
     base = results.params["const"]
     id_variable = results.params.get(Id,0.0)
     intercept = base + id_variable
 
-    #Compute the slope of the regression line
+    # Compute the slope of the regression line
     slope = results.params["TotalSteps"]
 
-    #Plot the regression line
+    # Store the regression line
     x_line = np.linspace(df_id["TotalSteps"].min(),df_id["TotalSteps"].max(),100)
     y_line = intercept + slope*x_line
 
-    ax.set_xlabel("Total steps")
-    ax.set_ylabel("Calories")
-    ax.set_title(f"Calories burned vs total steps taken for user {Id}")
-    ax.plot(x_line, y_line,  color= cm.get_cmap("Blues")(0.8))
-    ax.xaxis.label.set_color("white")
-    ax.tick_params(colors= "white")
-    ax.yaxis.label.set_color("white")
-    ax.title.set_color("white")
-    ax.set_frame_on(False)
-    fig.patch.set_alpha(0)
-    st.pyplot(fig)
+    # Scatterplot of TotalSteps vs Calories
+    fig = px.scatter(df_id,
+                     x= "TotalSteps",
+                     y="Calories",
+                     color_discrete_sequence=[px.colors.sequential.Blues[2]],
+                     title=f"Calories burned vs total steps taken for user {Id}")
+
+    # Add regression line
+    fig.add_scatter(x=x_line,
+                    y=y_line,
+                    mode="lines",
+                    line=dict(color=px.colors.sequential.Blues[7]),
+                    name="Regression")
+
+    # Update layout of the figure
+    fig.update_layout(height=500,
+                      paper_bgcolor="rgba(0,0,0,0)",
+                      plot_bgcolor="rgba(0,0,0,0)",
+                      xaxis_title="Total Steps",
+                      yaxis_title="Calories",
+                      font_color="white")
+
+    st.plotly_chart(fig)
+

@@ -1,3 +1,4 @@
+
 import streamlit as st
 import os
 from heart_rate import mean_heart_rate_per_day, HR_zones_per_group, heart_rate_vs_activity, mean_HR_per_group_compared_to_id
@@ -7,10 +8,13 @@ import sqlite3
 from heart_rate import HR_zones
 from weather import scatterplot_means, scatterplot_per_id
 from calories_regression import regression_calories
-from minutes_distribution import stacked_bar_chart_for_id
-from activity_logs import plot_global_activity_4_weeks, plot_user_activity_4_weeks, get_5_best_days, plot_user_activity_4_weeks, get_5_best_users
-from sleep_activity import individual_sleep_activity_corr
-from calories import plot_user_vs_global_calories
+from step import (
+    plot_steps_by_block_general,
+    plot_steps_by_block_per_id,
+    plot_sleep_sedentary_correlation,
+    plot_sleep_by_block_per_id,
+    plot_calories_by_block_per_id
+)
 
 st.set_page_config(
 page_title = "Fitbit Dashboard",
@@ -136,9 +140,8 @@ with general_tab:
     row4_col1, row4_col2 = st.columns(2)
     with row4_col1:
         HR_zones_per_group(heart_rate_df)
-    with row4_col2:
-        scatterplot_means(weather_df, daily_activity_df, choose)
-        st.write("Other plots here")
+    with col2:
+        plot_steps_by_block_general()
 
 with id_tab:
     col1, col2 = st.columns([1,6])
@@ -175,49 +178,10 @@ with id_tab:
                 
 
         if section == "Activity":
-            m1, m2, m3, m4 = st.columns(4)
-            m1.metric("Metric1", f"Something (Naomi)")
-            m2.metric("Metric2", f"Something (Naomi)")
-            m3.metric("Metric3", f"Something (Naomi)")
-            m4.metric("3", f"Something (Naomi)")
-
-            row1_col1, row1_col2 = st.columns(2)
-            with row1_col1:
-                st.write(plot_user_activity_4_weeks(Id, connection)) #Aimee
-            with row1_col2:
-                st.write("Activity steps per blocks of hours (Rojin)")
-
-            row2_col1, row2_col2 = st.columns(2)
-            with row2_col1:
-                st.write("Plot total activity per day of the week compared to general (Aimee)")
-            with row2_col2:
-                stacked_bar_chart_for_id(activity_minutes_df, Id)
-
-
+            plot_steps_by_block_per_id(Id)
         if section == "Sleep":
-            m1, m2, m3, m4 = st.columns(4)
-            m1.metric("Metric1", f"Something (Aimee)")
-            m2.metric("Metric2", f"Something (Aimee)")
-            m3.metric("Metric3", f"Something (Aimee)")
-            m4.metric("3", f"Something (Aimee)")
-
-            row1_col1, row1_col2 = st.columns(2)
-            with row1_col1:
-                individual_sleep_activity_corr(Id, connection) #Aimee
-            with row1_col2:
-                st.write("Sleep activity sedentary minutes correlation (Rojin)")
-
-            row2_col1, row2_col2 = st.columns(2)
-            with row2_col1:
-                st.write("Sleep per block (Rojin)")
-            with row2_col2:
-                st.write("Average sleep per day/week (Aimee)") #Aimee
-            
-            row3_col1, row3_col2 = st.columns(2)
-            with row3_col2:
-                view_by = st.radio("View by", ["Day", "Week"], horizontal=True, key="sleep_min", index=1)
-
-
+            plot_sleep_sedentary_correlation(Id)
+            plot_sleep_by_block_per_id(Id)
         if section == "Heart rate":
             m1, m2, m3, m4 = st.columns(4)
             m1.metric("Sample size", f"{len(heart_rate_df[heart_rate_df['Id']== Id])} records")
@@ -259,56 +223,6 @@ with id_tab:
             row1_col1, row1_col2 = st.columns(2)
             with row1_col1:
                 regression_calories(daily_activity_df, Id)
-            with row2_col1:
-                st.write("Calories per block (Rojin)")
-
-            row2_col1, row2_col2 = st.columns(2)
-            with row2_col1:
-                st.write("Eva do you have something about calories?")
-
-            with row2_col2:
-                plot_user_vs_global_calories(Id, connection) #Aimee
-
-        if section == "Intensity":
-            m1, m2, m3, m4 = st.columns(4)
-            m1.metric("Metric1", f"Something (Rojin)")
-            m2.metric("Metric2", f"Something (Rojin)")
-            m3.metric("Metric3", f"Something (Rojin) ")
-            m4.metric("3", f"Something (Rojin)")
-
-            row1_col1, row1_col2 = st.columns(2)
-            with row1_col1:
-                st.write("Average intensity by hour (Rojin)")
-            with row1_col2:
-                st.write("Steps vs total intensity per user (Rojin)")
-
-            row2_col1, row2_col2 = st.columns(2)
-            with row2_col1:
-                st.write("Heart rate vs intensity (Eva)")
-            with row2_col2:
-                st.write("Average intensity by day of week (Rojin)")
-
-        if section == "Weight":
-            m1, m2, m3, m4 = st.columns(4)
-            m1.metric("Metric1", f"Something")
-            m2.metric("Metric2", f"Something")
-            m3.metric("Metric3", f"Something")
-            m4.metric("3", f"Something")
-
-            row1_col1, row1_col2 = st.columns(2)
-            with row1_col1:
-                st.write("BMI for user (Eva)")
-            with row1_col2:
-                st.write("BMI compared to others/general (Eva)")
-            
-            row2_col1, row2_col2 = st.columns(2)
-            with row2_col1:
-                st.write("Weight for user (in KG and in Pounds)(Eva)")
-        
-
-
-
-
-
-
+            with col2:
+                plot_calories_by_block_per_id(Id)
 

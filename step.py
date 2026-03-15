@@ -1,216 +1,209 @@
 import pandas as pd
 import sqlite3
-
-
-def get_fitbit_report():
-    con = sqlite3.connect("fitbit_database.db")
-    sleep_query = "SELECT Id, logId, COUNT(*) as duration_minutes FROM minute_sleep GROUP BY logId"
-    df_sleep = pd.read_sql_query(sleep_query, con)
-    df_sleep['Id'] = df_sleep['Id'].astype(str)
-    df_sleep['logId'] = df_sleep['logId'].astype(str)
-
-    activity_query = "SELECT Id, COUNT(*) as appearance_count FROM daily_activity GROUP BY Id"
-    df_activity = pd.read_sql_query(activity_query, con)
-    df_activity['Id'] = df_activity['Id'].astype(str)
-
-    def classify_user(count):
-        if count <= 10: return "Light user"
-        if count <= 15: return "Moderate user"
-        return "Heavy user"
-
-    df_class = pd.DataFrame({
-        'Id': df_activity['Id'],
-        'Class': df_activity['appearance_count'].apply(classify_user)
-    })
-
-    final_df = pd.merge(df_sleep, df_class, on="Id", how="left")
-
-    con.close()
-    return final_df
-
-full_report = get_fitbit_report()
-print(full_report)
-
-
-
-import pandas as pd
-import sqlite3
 import numpy as np
-import matplotlib.pyplot as plt
 import scipy.stats as stats
+import plotly.graph_objects as go
+import streamlit as st
 
-
-def sedentary_sleep_regression():
-    con = sqlite3.connect("fitbit_database.db")
-
-    df_sleep = pd.read_sql_query("SELECT Id, date FROM minute_sleep", con)
-    df_activity = pd.read_sql_query("SELECT Id, ActivityDate, SedentaryMinutes FROM daily_activity", con)
-    con.close()
-
-    # Extract just the date part (remove the time)
-    df_sleep['date'] = pd.to_datetime(df_sleep['date']).dt.date
-    df_activity['ActivityDate'] = pd.to_datetime(df_activity['ActivityDate']).dt.date
-
-    df_sleep['Id'] = df_sleep['Id'].astype(str)
-    df_activity['Id'] = df_activity['Id'].astype(str)
-
-    # Count rows per person per day = total sleep minutes
-    df_sleep = df_sleep.groupby(['Id', 'date']).size().reset_index(name='SleepMinutes')
-
-    # Rename to match for merging
-    df_activity = df_activity.rename(columns={'ActivityDate': 'date'})
-    df = pd.merge(df_sleep, df_activity, on=['Id', 'date'], how='inner').dropna()
-
-    print(f"Merged rows: {len(df)}")
-
-    X = df['SedentaryMinutes'].values
-    y = df['SleepMinutes'].values
-
-    result = np.polyfit(X, y, 1)
-    slope = result[0]
-    intercept = result[1]
-    y_pred = slope * X + intercept
-    residuals = y - y_pred
-
-    ss_res = np.sum(residuals**2)
-    ss_tot = np.sum((y - np.mean(y))**2)
-    r_squared = 1 - ss_res / ss_tot
-
-    print(f"Intercept:   {intercept:.4f}")
-    print(f"Slope:       {slope:.4f}")
-    print(f"R-squared:   {r_squared:.4f}")
-
-    #  Plot 1: Scatterplot + Regression Line
-    plt.figure(figsize=(8, 5))
-    plt.scatter(X, y, alpha=0.4, color='steelblue', label='Data')
-    x_line = np.linspace(X.min(), X.max(), 200)
-    plt.plot(x_line, slope * x_line + intercept, color='red', linewidth=2, label=f'y = {slope:.2f}x + {intercept:.2f}')
-    plt.xlabel('Sedentary Minutes')
-    plt.ylabel('Sleep Duration (minutes)')
-    plt.title('Sedentary Activity vs Sleep Duration')
-    plt.legend()
-    plt.tight_layout()
-    plt.show()
-
-    # Plot 2 Q-Q Plot
-    plt.figure(figsize=(8, 5))
-    stats.probplot(residuals, dist="norm", plot=plt)
-    plt.title('Q-Q Plot of Residuals\n(checks normality assumption)')
-    plt.tight_layout()
-    plt.show()
-
-sedentary_sleep_regression()
-
-#second part
-
-import sqlite3
-import pandas as pd
-import matplotlib.pyplot as plt
-
-# connect to the database
-conn = sqlite3.connect("fitbit_database.db")
-
-# define 4-hour time blocks
 bins   = [0, 4, 8, 12, 16, 20, 24]
 labels = ["0-4", "4-8", "8-12", "12-16", "16-20", "20-24"]
 
-def plot_steps_by_block(conn, bins=bins, labels=labels):
-    # load hourly steps table from the database
-    steps_df = pd.read_sql_query("SELECT ActivityHour, StepTotal FROM hourly_steps", conn)
 
-    # convert ActivityHour column to datetime format
-    steps_df["ActivityHour"] = pd.to_datetime(steps_df["ActivityHour"], format="%m/%d/%Y %I:%M:%S %p")
-
-    # extract the hour from the datetime
-    steps_df["Hour"] = steps_df["ActivityHour"].dt.hour
-
-    # assign each row to a 4-hour block based on the hour
-    steps_df["Block"] = pd.cut(steps_df["Hour"], bins=bins, labels=labels, right=False)
-
-    # compute the average steps per block across all participants
-    steps_avg = steps_df.groupby("Block", observed=True)["StepTotal"].mean()
-
-    # plot the results as a bar plot
-    plt.figure(figsize=(9, 5))
-    plt.bar(steps_avg.index, steps_avg.values, color="#4C9BE8", edgecolor="white", width=0.6)
-    plt.title("Average Steps per 4-Hour Block", fontsize=14, fontweight="bold")
-    plt.xlabel("Time Block (hours)", fontsize=11)
-    plt.ylabel("Average Steps", fontsize=11)
-    plt.grid(axis="y", linestyle="--", alpha=0.4)
-    plt.tight_layout()
-    plt.savefig("steps_by_block.png", dpi=150)
-    plt.show()
-
-# call it like this:
-plot_steps_by_block(conn)
-
-# CALORIES
-
-# hourly calories table from the database
-cal_df = pd.read_sql_query("SELECT ActivityHour, Calories FROM hourly_calories", conn)
-
-# convert ActivityHour column to datetime format
-cal_df["ActivityHour"] = pd.to_datetime(cal_df["ActivityHour"], format="%m/%d/%Y %I:%M:%S %p")
-
-# extract the hour from the datetime
-cal_df["Hour"] = cal_df["ActivityHour"].dt.hour
-
-# assign each row to a 4-hour block based on the hour
-cal_df["Block"] = pd.cut(cal_df["Hour"], bins=bins, labels=labels, right=False)
-
-# compute the average calories burnt per block across all participants
-cal_avg = cal_df.groupby("Block", observed=True)["Calories"].mean()
-
-# plot the results as a barplot
-plt.figure(figsize=(9, 5))
-plt.bar(cal_avg.index, cal_avg.values, color="#E8804C", edgecolor="white", width=0.6)
-plt.title("Average Calories Burnt per 4-Hour Block", fontsize=14, fontweight="bold")
-plt.xlabel("Time Block (hours)", fontsize=11)
-plt.ylabel("Average Calories", fontsize=11)
-plt.grid(axis="y", linestyle="--", alpha=0.4)
-plt.tight_layout()
-plt.savefig("calories_by_block.png", dpi=150)
-plt.show()
-
-# SLEEP
-
-# load minute sleep table from the database (each row = 1 minute)
-sleep_df = pd.read_sql_query("SELECT date, value FROM minute_sleep", conn)
-
-# convert date column to datetime format
-sleep_df["date"] = pd.to_datetime(sleep_df["date"], format="%m/%d/%Y %I:%M:%S %p")
-
-# extract the hour from the datetime
-sleep_df["Hour"] = sleep_df["date"].dt.hour
-
-# assign each row to a 4-hour block based on the hour
-sleep_df["Block"] = pd.cut(sleep_df["Hour"], bins=bins, labels=labels, right=False)
-
-# value == 1 means the participant was asleep; convert to integer (1 = asleep, 0 = not)
-sleep_df["Asleep"] = (sleep_df["value"] == 1).astype(int)
-
-# compute average minutes asleep per block (each row = 1 minute, so mean * 60 gives minutes)
-sleep_avg = sleep_df.groupby("Block", observed=True)["Asleep"].mean() * 60
-
-# plot the results as a bar plot
-plt.figure(figsize=(9, 5))
-plt.bar(sleep_avg.index, sleep_avg.values, color="#9B4CE8", edgecolor="white", width=0.6)
-plt.title("Average Minutes of Sleep per 4-Hour Block", fontsize=14, fontweight="bold")
-plt.xlabel("Time Block (hours)", fontsize=11)
-plt.ylabel("Average Minutes Asleep", fontsize=11)
-plt.grid(axis="y", linestyle="--", alpha=0.4)
-plt.tight_layout()
-plt.savefig("sleep_by_block.png", dpi=150)
-plt.show()
+@st.cache_resource
+def get_connection():
+    return sqlite3.connect("fitbit_database.db", check_same_thread=False)
 
 
+# ─────────────────────────────────────────────
+# 1. GENERAL TAB — Steps over day by 4-hour blocks (all users)
+# ─────────────────────────────────────────────
+
+def plot_steps_by_block_general():
+    df = pd.read_sql_query("SELECT ActivityHour, StepTotal FROM hourly_steps", get_connection())
+    df["ActivityHour"] = pd.to_datetime(df["ActivityHour"], format="%m/%d/%Y %I:%M:%S %p")
+    df["Hour"] = df["ActivityHour"].dt.hour
+    df["Block"] = pd.cut(df["Hour"], bins=bins, labels=labels, right=False)
+
+    avg = df.groupby("Block", observed=True)["StepTotal"].mean()
+
+    fig = go.Figure(go.Bar(
+        x=list(avg.index),
+        y=list(avg.values),
+        marker_color="#4C9BE8",
+        marker_line_color="white",
+        marker_line_width=1.5
+    ))
+    fig.update_layout(
+        title="Average Steps per 4-Hour Block (All Users)",
+        xaxis_title="Time Block (hours)",
+        yaxis_title="Average Steps",
+        yaxis=dict(gridcolor="rgba(0,0,0,0.15)"),
+        height=450
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
 
+# ─────────────────────────────────────────────
+# 2. PER ID — Activity steps per blocks of hours
+# ─────────────────────────────────────────────
+
+def plot_steps_by_block_per_id(selected_id):
+    df = pd.read_sql_query("SELECT Id, ActivityHour, StepTotal FROM hourly_steps", get_connection())
+    df["ActivityHour"] = pd.to_datetime(df["ActivityHour"], format="%m/%d/%Y %I:%M:%S %p")
+    df["Hour"] = df["ActivityHour"].dt.hour
+    df["Block"] = pd.cut(df["Hour"], bins=bins, labels=labels, right=False)
+    df["Id"] = df["Id"].astype(str)
+
+    user_df = df[df["Id"] == selected_id]
+    avg = user_df.groupby("Block", observed=True)["StepTotal"].mean()
+
+    fig = go.Figure(go.Bar(
+        x=list(avg.index),
+        y=list(avg.values),
+        marker_color="#4C9BE8",
+        marker_line_color="white",
+        marker_line_width=1.5
+    ))
+    fig.update_layout(
+        title=f"Average Steps per 4-Hour Block — User {selected_id}",
+        xaxis_title="Time Block (hours)",
+        yaxis_title="Average Steps",
+        yaxis=dict(gridcolor="rgba(0,0,0,0.15)"),
+        height=450
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
 
+# ─────────────────────────────────────────────
+# 3. PER ID — Sleep & Sedentary Minutes Correlation
+# ─────────────────────────────────────────────
+
+def plot_sleep_sedentary_correlation(selected_id):
+    conn = get_connection()
+    df_sleep = pd.read_sql_query("SELECT Id, date, value FROM minute_sleep", conn)
+    df_sleep["date"] = pd.to_datetime(df_sleep["date"], format="%m/%d/%Y %I:%M:%S %p")
+    df_sleep["Date"] = df_sleep["date"].dt.date
+    df_sleep["Id"] = df_sleep["Id"].astype(str)
+
+    df_activity = pd.read_sql_query("SELECT Id, ActivityDate, SedentaryMinutes FROM daily_activity", conn)
+    df_activity["ActivityDate"] = pd.to_datetime(df_activity["ActivityDate"]).dt.date
+    df_activity["Id"] = df_activity["Id"].astype(str)
+    df_activity = df_activity.rename(columns={"ActivityDate": "Date"})
+
+    sleep_daily = (
+        df_sleep[(df_sleep["Id"] == selected_id) & (df_sleep["value"] == 1)]
+        .groupby("Date")
+        .size()
+        .reset_index(name="SleepMinutes")
+    )
+    user_activity = df_activity[df_activity["Id"] == selected_id][["Date", "SedentaryMinutes"]]
+
+    sleep_daily = sleep_daily.set_index("Date")
+    user_activity = user_activity.set_index("Date")
+    combined = sleep_daily.join(user_activity, how="inner").dropna().reset_index()
+
+    if len(combined) < 2:
+        st.warning(f"Not enough data for User {selected_id} to plot correlation.")
+        return
+
+    X = combined["SedentaryMinutes"].values
+    y = combined["SleepMinutes"].values
+    slope, intercept = np.polyfit(X, y, 1)
+    x_line = np.linspace(X.min(), X.max(), 100)
+    y_line = slope * x_line + intercept
+
+    residuals = y - (slope * X + intercept)
+    ss_res = np.sum(residuals ** 2)
+    ss_tot = np.sum((y - np.mean(y)) ** 2)
+    r2 = round(1 - ss_res / ss_tot, 4) if ss_tot != 0 else 0
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=X, y=y,
+        mode='markers',
+        marker=dict(color='steelblue', opacity=0.5, size=7),
+        name='Data'
+    ))
+    fig.add_trace(go.Scatter(
+        x=x_line, y=y_line,
+        mode='lines',
+        line=dict(color='red', width=2),
+        name=f'y = {slope:.2f}x + {intercept:.2f}  |  R²={r2}'
+    ))
+    fig.update_layout(
+        title=f"Sedentary Minutes vs Sleep Duration — User {selected_id}",
+        xaxis_title="Sedentary Minutes",
+        yaxis_title="Sleep Duration (minutes)",
+        height=450
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
 
+# ─────────────────────────────────────────────
+# 4. PER ID — Sleep per 4-hour block
+# ─────────────────────────────────────────────
+
+def plot_sleep_by_block_per_id(selected_id):
+    df = pd.read_sql_query("SELECT Id, date, value FROM minute_sleep", get_connection())
+    df["date"] = pd.to_datetime(df["date"], format="%m/%d/%Y %I:%M:%S %p")
+    df["Hour"] = df["date"].dt.hour
+    df["Date"] = df["date"].dt.date
+    df["Block"] = pd.cut(df["Hour"], bins=bins, labels=labels, right=False)
+    df["Id"] = df["Id"].astype(str)
+
+    user_df = df[(df["Id"] == selected_id) & (df["value"] == 1)]
+    sleep_per_day = (
+        user_df.groupby(["Date", "Block"], observed=True)
+        .size()
+        .reset_index(name="SleepMinutes")
+    )
+    avg = sleep_per_day.groupby("Block", observed=True)["SleepMinutes"].mean()
+
+    fig = go.Figure(go.Bar(
+        x=list(avg.index),
+        y=list(avg.values),
+        marker_color="#9B4CE8",
+        marker_line_color="white",
+        marker_line_width=1.5
+    ))
+    fig.update_layout(
+        title=f"Average Sleep Minutes per 4-Hour Block — User {selected_id}",
+        xaxis_title="Time Block (hours)",
+        yaxis_title="Average Minutes Asleep",
+        yaxis=dict(gridcolor="rgba(0,0,0,0.15)"),
+        height=450
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
 
+# ─────────────────────────────────────────────
+# 5. PER ID — Calories per 4-hour block
+# ─────────────────────────────────────────────
+
+def plot_calories_by_block_per_id(selected_id):
+    df = pd.read_sql_query("SELECT Id, ActivityHour, Calories FROM hourly_calories", get_connection())
+    df["ActivityHour"] = pd.to_datetime(df["ActivityHour"], format="%m/%d/%Y %I:%M:%S %p")
+    df["Hour"] = df["ActivityHour"].dt.hour
+    df["Block"] = pd.cut(df["Hour"], bins=bins, labels=labels, right=False)
+    df["Id"] = df["Id"].astype(str)
+
+    user_df = df[df["Id"] == selected_id]
+    avg = user_df.groupby("Block", observed=True)["Calories"].mean()
+
+    fig = go.Figure(go.Bar(
+        x=list(avg.index),
+        y=list(avg.values),
+        marker_color="#E8804C",
+        marker_line_color="white",
+        marker_line_width=1.5
+    ))
+    fig.update_layout(
+        title=f"Average Calories per 4-Hour Block — User {selected_id}",
+        xaxis_title="Time Block (hours)",
+        yaxis_title="Average Calories",
+        yaxis=dict(gridcolor="rgba(0,0,0,0.15)"),
+        height=450
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
 

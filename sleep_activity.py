@@ -112,4 +112,4 @@ def individual_sleep_activity_corr(user_id, con):
 
 #individual_sleep_activity_corr(2347167796)
 #individual_sleep_activity_corr(4319703577)
-global_sleep_activity_corr()
+# global_sleep_activity_corr()

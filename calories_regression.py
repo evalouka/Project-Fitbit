@@ -1,39 +1,53 @@
+"""
+This script provides a function that fits an OLS regression model with Id treated as a factor
+and visualizes the relationship between calories and TotalSteps for a selected user.
+
+"""
+
 import pandas as pd
 import statsmodels.api as sm
 import streamlit as st
-import matplotlib.pyplot as plt
 import numpy as np
-import matplotlib.cm as cm
-from sympy.physics.units import minutes
 import plotly.express as px
 
-def regression_calories(df, Id):
-    # Store calories in dependent variably y
+def plot_regression_calories(df, Id):
+    """
+       Create a figure that fits an OLS regression model with Calories as response variable, TotalSteps as an
+       independent variable, and Id as factor that affects the intercept of the regression line.
+
+       Args:
+           df: activity dataframe containing "Id", "Calories", and "TotalSteps"
+           Id: The Id of the user to analyze
+
+       Returns:
+          Plotly figure object
+       """
+
+    # Store calories in response variable y
     y = df["Calories"]
 
-    # Store calories in independent variably x
+    # Store calories in independent variable x
     x = df[["TotalSteps"]]
 
-    # Add dummy columns to account for ID factor
-    id_dummies = pd.get_dummies(df["Id"], drop_first=True)
-    x = pd.concat([x, id_dummies], axis=1)
-
-    # Add constants to ensure an intercept
-    x = sm.add_constant(x)
-
-    # Fit the model
-    model = sm.OLS(y, x)
-    results = model.fit()
-
-    # Find data belonging to the given ID and make a scatterplot
+    # Filter data for given Id
     df_id = df[df["Id"] == Id]
 
     if df_id.empty:
         st.write("No calories data available")
         return
 
+    # Add dummy columns to account for ID factor
+    id_dummies = pd.get_dummies(df["Id"], drop_first=True)
+    x = pd.concat([x, id_dummies], axis=1)
 
-    # Copmute base intercept and the id variable to compute the intercept for a given ID
+    # Add a constant to ensure an intercept
+    x = sm.add_constant(x)
+
+    # Fit the model
+    model = sm.OLS(y, x)
+    results = model.fit()
+
+    # Compute base intercept and the id variable to compute the intercept for a given ID
     base = results.params["const"]
     id_variable = results.params.get(Id,0.0)
     intercept = base + id_variable
@@ -50,7 +64,7 @@ def regression_calories(df, Id):
                      x= "TotalSteps",
                      y="Calories",
                      color_discrete_sequence=[px.colors.sequential.Blues[2]],
-                     title=f"Calories burned vs total steps taken for user {Id}")
+                     title=f"Calories vs Total Steps for user {Id}")
 
     # Add regression line
     fig.add_scatter(x=x_line,

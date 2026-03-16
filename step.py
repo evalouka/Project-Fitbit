@@ -205,5 +205,3 @@ def plot_calories_by_block_per_id(selected_id):
         height=450
     )
     st.plotly_chart(fig, use_container_width=True)
-
-

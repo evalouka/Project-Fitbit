@@ -56,7 +56,7 @@ The data comes from 33 Fitbit users who submitted usage data via an Amazon surve
 
 Make sure you have **Python 3** installed. Then install the required libraries:
 ```bash
-pip install pandas numpy matplotlib scipy statsmodels streamlit sqlite3
+pip install pandas numpy plotly scipy statsmodels streamlit sqlite3
 ```
 
 > `sqlite3` comes built-in with Python — no separate installation needed.
@@ -69,10 +69,6 @@ pip install pandas numpy matplotlib scipy statsmodels streamlit sqlite3
 ```bash
 streamlit run part5/dashboard.py
 ```
-
-### Run Individual Analysis Scripts
-
-Each part can also be run independently. See the sections below for details.
 
 ---
 
@@ -138,7 +134,7 @@ The Streamlit dashboard includes:
 
 - **Python 3** — core language
 - **pandas & numpy** — data manipulation
-- **matplotlib & scipy** — visualizations and statistics
+- **plotly & scipy** — visualizations and statistics
 - **statsmodels** — OLS regression
 - **sqlite3** — database access
 - **Streamlit** — interactive dashboard

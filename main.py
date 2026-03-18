@@ -124,8 +124,8 @@ with general_tab:
 
     m1.metric("Number of users", f"{len(load_unique_id())}")
     m2.metric("Average activity", f"{daily_activity_df['TotalSteps'].mean():.0f} steps")
-    m3.metric("Date range", f"{daily_activity_df.sort_values(by= 'ActivityDate')['ActivityDate'].iloc[0]}"
-                            f" - {daily_activity_df.sort_values(by= 'ActivityDate')['ActivityDate'].iloc[-1]} ")
+    m3.metric("Date range", f"{daily_activity_df.sort_values(by= 'ActivityDate')['ActivityDate'].iloc[0].strftime('%d/%m/%Y')}"
+                            f" - {daily_activity_df.sort_values(by= 'ActivityDate')['ActivityDate'].iloc[-1].strftime('%d/%m/%Y')} ")
     m4.metric("Average sleep", f"Aimee")
 
     row1_col1, row1_col2 = st.columns(2)
@@ -163,8 +163,8 @@ with id_tab:
             id_daily_activity = daily_activity_df[daily_activity_df['Id']== Id]
             m1.metric("You are a", id_class+ " user")
             m2.metric("Average activity", f"{id_daily_activity['TotalSteps'].mean():.0f} steps")
-            m3.metric("Date range", f"{id_daily_activity.sort_values(by= 'ActivityDate')['ActivityDate'].iloc[0].strftime('%Y/%m/%d')}"
-                            f" - {id_daily_activity.sort_values(by= 'ActivityDate')['ActivityDate'].iloc[-1].strftime('%Y/%m/%d')} ")
+            m3.metric("Date range", f"{id_daily_activity.sort_values(by= 'ActivityDate')['ActivityDate'].iloc[0].strftime('%d/%m/%Y')}"
+                            f" - {id_daily_activity.sort_values(by= 'ActivityDate')['ActivityDate'].iloc[-1].strftime('%d/%m/%Y')} ")
             m4.metric("Average sleep", f"Aimee")
 
             row1_col1, row1_col2 = st.columns(2)

@@ -3,13 +3,6 @@ This script provides a function to visualize the distribution of activity minute
 
 """
 
-import sqlite3
-import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
-import statsmodels.api as sm
-from user_classification import classify_users
-import matplotlib.cm as cm
 import streamlit as st
 import plotly.express as px
 
@@ -46,10 +39,11 @@ def distribution_activity_minutes_for_id(df,Id):
     fig = px.bar(minutes_df,
                  x = "ActivityDate",
                  y = ["SedentaryMinutes", "LightlyActiveMinutes", "FairlyActiveMinutes", "VeryActiveMinutes"],
-                 title = f"Daily distribution of activity minutes for user {id}",
+                 title = f"Daily distribution of activity minutes for user {Id}",
                  color_discrete_sequence= px.colors.sequential.Blues_r)
 
     fig.update_layout(barmode ="stack",
+                      height = 450,
                       paper_bgcolor ="rgba(0,0,0,0)",
                       plot_bgcolor = "rgba(0,0,0,0)",
                       xaxis_title = "Date",

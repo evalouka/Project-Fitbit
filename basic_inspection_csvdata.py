@@ -1,13 +1,12 @@
 import pandas as pd
 import plotly.express as px
 
-df = pd.read_csv("fitbit_data/daily_acivity.csv")
+df = pd.read_csv("daily_activity.csv")
 
 #Count unique users
 unique_users = df["Id"].nunique()
 print(unique_users)
 print(df.describe())
-
 
 #Total distance per user
 total_distance = df.groupby("Id")["TotalDistance"].sum()

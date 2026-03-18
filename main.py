@@ -1,16 +1,24 @@
 
 import streamlit as st
 import os
-from heart_rate import mean_heart_rate_per_day, HR_zones_per_group, heart_rate_vs_activity, mean_HR_per_group_compared_to_id
+from heart_rate import plot_mean_heart_rate, HR_zones_per_group, plot_heart_rate_vs_activity_with_intensity, mean_HR_per_group_compared_to_id
 from user_classification import classify_users
 import pandas as pd
 import sqlite3
-from heart_rate import HR_zones
-from weather import scatterplot_means
-from calories_regression import regression_calories
-from activity_logs import plot_global_activity_4_weeks, plot_user_activity_4_weeks, get_5_best_days, bar_average_activity_week
+from heart_rate import plot_hr_zones
+from weather import plot_weather_vs_activity, plot_weather_vs_activity_per_id
+from calories_regression import plot_regression_calories
+from minutes_distribution import distribution_activity_minutes_for_id
+# from activity_logs import plot_global_activity_4_weeks, plot_user_activity_4_weeks, get_5_best_days, plot_user_activity_4_weeks, get_5_best_users
 from sleep_activity import individual_sleep_activity_corr
 from calories import plot_user_vs_global_calories
+from step import (
+    plot_steps_by_block_general,
+    plot_steps_by_block_per_id,
+    plot_sleep_sedentary_correlation,
+    plot_sleep_by_block_per_id,
+    plot_calories_by_block_per_id
+)
 
 st.set_page_config(
 page_title = "Fitbit Dashboard",
@@ -87,10 +95,23 @@ general_tab, id_tab = st.tabs(["General", "Id"])
 
 with general_tab:
     m1, m2, m3, m4 = st.columns(4)
-    m1.metric("Metric1", f"Something")
-    m2.metric("Metric2", f"Something")
-    m3.metric("Metric3", f"Something")
-    m4.metric("3", f"Something")
+    st.markdown("""
+        <style>
+        [data-testid="stMetricLabel"] p {
+            font-weight: bold ; 
+        }
+        [data-testid="stMetricValue"] {
+            font-size: 20px;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+
+    m1.metric("Number of users", f"{len(load_unique_id())}")
+    m2.metric("Average activity", f"{daily_activity_df['TotalSteps'].mean():.0f} steps")
+    m3.metric("Date range", f"{daily_activity_df.sort_values(by= 'ActivityDate')['ActivityDate'].iloc[0].strftime('%d/%m/%Y')}"
+                            f" - {daily_activity_df.sort_values(by= 'ActivityDate')['ActivityDate'].iloc[-1].strftime('%d/%m/%Y')} ")
+    m4.metric("Average sleep", f"Aimee")
 
     row1_col1, row1_col2 = st.columns(2)
     with row1_col1:
@@ -126,10 +147,13 @@ with id_tab:
     with col2:
         if section == "General":
             m1, m2, m3, m4 = st.columns(4)
-            m1.metric("You are", f" light/heavy/moderate user")
-            m2.metric("Metric2", f"Something")
-            m3.metric("Metric3", f"Something")
-            m4.metric("3", f"Something")
+            id_class = classify_users()[classify_users()['Id'].astype(str) == Id]['Class'].values[0]
+            id_daily_activity = daily_activity_df[daily_activity_df['Id']== Id]
+            m1.metric("You are a", id_class+ " user")
+            m2.metric("Average activity", f"{id_daily_activity['TotalSteps'].mean():.0f} steps")
+            m3.metric("Date range", f"{id_daily_activity.sort_values(by= 'ActivityDate')['ActivityDate'].iloc[0].strftime('%d/%m/%Y')}"
+                            f" - {id_daily_activity.sort_values(by= 'ActivityDate')['ActivityDate'].iloc[-1].strftime('%d/%m/%Y')} ")
+            m4.metric("Average sleep", f"Aimee")
 
             row1_col1, row1_col2 = st.columns(2)
             with row1_col1:

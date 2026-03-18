@@ -163,7 +163,7 @@ def plot_weather_vs_activity(df1, df2, choose):
                    line= dict(color= px.colors.sequential.Blues[7]),
                    name = "Regression")
 
-    fig.update_layout(height = 500,
+    fig.update_layout(height = 450,
                      paper_bgcolor="rgba(0,0,0,0)",
                      plot_bgcolor="rgba(0,0,0,0)",
                      xaxis_title=xlabel,

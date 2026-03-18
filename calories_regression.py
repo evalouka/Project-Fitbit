@@ -59,22 +59,19 @@ def plot_regression_calories(df, Id):
     x_line = np.linspace(df_id["TotalSteps"].min(),df_id["TotalSteps"].max(),100)
     y_line = intercept + slope*x_line
 
-    # Scatterplot of TotalSteps vs Calories
     fig = px.scatter(df_id,
                      x= "TotalSteps",
                      y="Calories",
                      color_discrete_sequence=[px.colors.sequential.Blues[2]],
                      title=f"Calories vs Total Steps for user {Id}")
 
-    # Add regression line
     fig.add_scatter(x=x_line,
                     y=y_line,
                     mode="lines",
                     line=dict(color=px.colors.sequential.Blues[7]),
                     name="Regression")
 
-    # Update layout of the figure
-    fig.update_layout(height=500,
+    fig.update_layout(height=450,
                       paper_bgcolor="rgba(0,0,0,0)",
                       plot_bgcolor="rgba(0,0,0,0)",
                       xaxis_title="Total Steps",

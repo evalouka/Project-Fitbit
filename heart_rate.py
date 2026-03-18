@@ -58,7 +58,7 @@ def plot_mean_heart_rate(df, Id, view_by):
                   color_discrete_sequence=[px.colors.sequential.Blues[4]]
                   )
 
-    fig.update_layout(height = 400,
+    fig.update_layout(height = 450,
                       paper_bgcolor="rgba(0,0,0,0)",
                       plot_bgcolor="rgba(0,0,0,0)",
                       xaxis_title=xlabel,
@@ -123,11 +123,11 @@ def plot_heart_rate_vs_activity_with_intensity(df1, df2, df3, Id):
                      x= "StepTotal",
                      y= "Value",
                      color ="AverageIntensity",
-                     title = f"Total steps vs mean heart rate per hour colored by the average intensity \n for user {Id}",
+                     title = f"Total steps vs mean heart rate per hour colored by the average intensity <br> for user {Id}",
                      color_continuous_scale= "Blues",
                      )
 
-    fig.update_layout(height = 400,
+    fig.update_layout(height = 470,
                       paper_bgcolor="rgba(0,0,0,0)",
                       plot_bgcolor="rgba(0,0,0,0)",
                       xaxis_title="Total Steps",
@@ -201,7 +201,7 @@ def plot_hr_zones(df, Id, view_by):
                  color_discrete_sequence=px.colors.sequential.Blues_r)
 
     fig.update_layout(barmode="stack",
-                      height=400,
+                      height=450,
                       paper_bgcolor="rgba(0,0,0,0)",
                       plot_bgcolor="rgba(0,0,0,0)",
                       xaxis_title=xlabel,
@@ -263,7 +263,7 @@ def mean_HR_per_group_compared_to_id(df, Id, selected):
 
     # Line plot of heart rate means
     fig = px.line(selected_df,
-                  height = 400,
+                  height = 470,
                   x = "Hour",
                   y = "Value",
                   color = "Class",
@@ -348,15 +348,26 @@ def HR_zones_per_group(df):
                  color_discrete_sequence=px.colors.sequential.Blues_r)
 
     fig.update_layout(barmode="stack",
-                      height=400,
+                      height=450,
                       paper_bgcolor="rgba(0,0,0,0)",
                       plot_bgcolor="rgba(0,0,0,0)",
                       xaxis_title="Class",
                       yaxis_title="Percentage",
                       font_color="white",
                       legend=dict(yanchor="top", y=1, xanchor="left", x=1.02),
+
                       )
 
     st.plotly_chart(fig)
+
+    # Compute the number of light, moderate, and heavy users for caption
+    unique_id = heart_rate_df[["Id", "Class"]].drop_duplicates()
+    heavy_count = (unique_id["Class"] == "Heavy").sum()
+    moderate_count = (unique_id["Class"] == "Moderate").sum()
+    light_count = (unique_id["Class"] == "Light").sum()
+    st.caption(
+        f"Based on {heavy_count} heavy user(s), {moderate_count} moderate user(s), and {light_count} "
+        f"light user(s)")
+
 
 

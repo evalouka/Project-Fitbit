@@ -5,6 +5,7 @@ import scipy.stats as stats
 import numpy as np
 from sleep import get_global_sleep_minutes, get_users_sleep_minutes
 from activity_logs import get_global_activity, get_user_activity
+import plotly.express as px
 
 def get_global_sleep_averages(con):
     df_sleep = get_global_sleep_minutes(con)
@@ -84,7 +85,7 @@ def individual_sleep_activity_corr(user_id, con):
         return None
 
     correlation = df_combined['active_minutes'].corr(df_combined['duration_minutes'])
-    
+
     print(f"--- Analysis for User {user_id_str} ---")
     print(f"Days of data: {len(df_combined)}")
     print(f"Correlation Coefficient: {correlation:.2f}")
@@ -96,20 +97,31 @@ def individual_sleep_activity_corr(user_id, con):
     else:
         print("Weak or no relationship")
 
-    plt.figure(figsize=(10, 6))
-    plt.scatter(df_combined['active_minutes'], df_combined['duration_minutes'], color='blue', alpha=0.7)
+    fig = px.scatter(df_combined, x='duration_minutes', y='active_minutes', 
+        title=f"Activity vs Sleep for {user_id_str}",
+        trendline="ols")
 
-    m, b = np.polyfit(df_combined['active_minutes'], df_combined['duration_minutes'], 1)
-    plt.plot(df_combined['active_minutes'], m*df_combined['active_minutes'] + b, color='red')
+    fig.update_layout(paper_bgcolor="rgba(0,0,0,0)",
+                      plot_bgcolor="rgba(0,0,0,0)",
+                      xaxis_title="Sleep minutes",
+                      yaxis_title="Active minutes",
+                      font_color="Black")
+    
+    fig.update_traces(
+        marker=dict(color="#A960DA", size=10, symbol='circle'),
+        selector=dict(mode='markers'))
+    
+    fig.update_traces(
+        line=dict(color="#B3617B", width=3, dash='dash'),
+        selector=dict(mode='lines'))
 
-    plt.title(f"Individual Correlation: Sleep vs Activity (User {user_id_str})")
-    plt.xlabel("Daily Active Minutes")
-    plt.ylabel("Daily Sleep Minutes")
-    plt.grid(True)
-    plt.show()
-
+    fig.show()
     return correlation
 
 #individual_sleep_activity_corr(2347167796)
 #individual_sleep_activity_corr(4319703577)
 # global_sleep_activity_corr()
+
+#Id = 4319703577
+#con = sqlite3.connect(r"C:\Users\jonge\PycharmProjects\Data Engineering\Project-Fitbit\fitbit_database.db")
+#individual_sleep_activity_corr(Id, con)

@@ -2,16 +2,13 @@ import sqlite3
 import pandas as pd
 from datetime import datetime
 import plotly.express as px
+import streamlit as st
 
-def plot_user_vs_global_calories(Id, con):
+def plot_user_vs_global_calories(Id, calories_df):
 
-    user_query = "SELECT * FROM daily_activity WHERE Id = ?"
-    user_df = pd.read_sql_query(user_query, con, params=(Id,))
-
-    global_query = "SELECT ActivityDate, AVG(Calories) as average_calories FROM daily_activity GROUP BY ActivityDate"
-    global_df = pd.read_sql_query(global_query, con)
-
-    #con.close()
+    user_df = calories_df[calories_df['Id'] == str(Id)].copy()
+    global_df = calories_df.groupby('ActivityDate')['Calories'].mean().reset_index()
+    global_df.rename(columns={'Calories': 'average_calories'}, inplace=True)
 
     if user_df.empty:
         print(f"No data found for ID: {Id}")
@@ -46,7 +43,7 @@ def plot_user_vs_global_calories(Id, con):
                       yaxis_title="Calories burned",
                       font_color="white")
 
-    fig.show()
+    st.plotly_chart(fig)
 
 #Id = 4319703577
 #con = sqlite3.connect(r"C:\Users\jonge\PycharmProjects\Data Engineering\Project-Fitbit\fitbit_database.db")

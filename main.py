@@ -12,7 +12,7 @@ from minutes_distribution import distribution_activity_minutes_for_id
 from activity_logs import plot_global_activity_4_weeks, plot_user_activity_4_weeks, get_5_best_days, plot_user_activity_4_weeks, bar_average_activity_week
 from sleep_activity import individual_sleep_activity_corr, print_sleep_activity_corr
 from calories import plot_user_vs_global_calories
-from sleep import get_users_sleep_minutes, get_average_sleep, total_avg_sleep_per_night
+from sleep import get_users_sleep_minutes, get_average_sleep, total_avg_sleep_per_night, plot_sleep_vs_heartrate
 from step import (
     plot_steps_by_block_general,
     plot_steps_by_block_per_id,
@@ -135,7 +135,7 @@ def load_user_activity():
 def load_calories_data():
     query = "SELECT Id, ActivityDate, Calories FROM daily_activity"
     df = pd.read_sql_query(query, connection)
-    df['Id'] = pd.to_numeric(df['Id'], errors='coerce').astype('Int64').astype(str)
+    df['Id'] = pd.to_numeric(df['Id'], errors='coerce').astype(str)
     df['ActivityDate'] = pd.to_datetime(df['ActivityDate'])
     return df
 
@@ -261,7 +261,7 @@ with id_tab:
 
             row1_col1, row1_col2 = st.columns(2)
             with row1_col1:
-                plot_user_activity_4_weeks(Id, activity_all_users_df, view_by)  # Aimee
+                plot_user_activity_4_weeks(Id, activity_all_users_df, view_by)
             with row1_col2:
                 plot_steps_by_block_per_id(Id)
 
@@ -284,14 +284,14 @@ with id_tab:
                       f"{night_count}")
             m2.metric("Average sleep per night", 
                       f"{id_sleep_minutes.mean():.0f} minutes ({id_sleep_minutes.mean()/60:.1f} Hours)")
-            m3.metric("You get the best sleep at",
+            m3.metric("You get the best sleep on",
                       f"{best_sleep_day}")
             m4.metric(f"Your sleep/activity correlation", 
                       f"{correlation:.2f} %")
 
             row1_col1, row1_col2 = st.columns(2)
             with row1_col1:
-                individual_sleep_activity_corr(Id, activity_induvidual_df, sleep_df)  # Aimee
+                individual_sleep_activity_corr(Id, activity_induvidual_df, sleep_df)
             with row1_col2:
                 plot_sleep_sedentary_correlation(Id)
 
@@ -340,7 +340,7 @@ with id_tab:
 
             row4_col1, row4_col2 = st.columns(2)
             with row4_col1:
-                st.write("Average hear rate of the day vs sleep of that day (Aimee)") #Aimee
+                plot_sleep_vs_heartrate(Id, sleep_df, heart_rate_df)
 
         if section == "Calories":
             m1, m2, m3, m4 = st.columns(4)
@@ -355,12 +355,16 @@ with id_tab:
             with row2_col1:
                 plot_calories_by_block_per_id(Id)
 
+            view_col_1, view_col_2 = st.columns(2)
+            with view_col_2:
+                view_by = st.selectbox("View by", ["Last week", "All data"], key="calories_view")
+
             row2_col1, row2_col2 = st.columns(2)
             with row2_col1:
                 st.write("Eva do you have something about calories?")
 
             with row2_col2:
-                plot_user_vs_global_calories(Id, calories_df)  # Aimee
+                plot_user_vs_global_calories(Id, calories_df, view_by)
 
         if section == "Intensity":
             m1, m2, m3, m4 = st.columns(4)

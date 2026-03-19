@@ -1,3 +1,20 @@
+"""
+
+This script provides functions for analyzing the relationship between sleep and activity.
+
+The file contains the following functions:
+
+    individual_sleep_activity_corr
+        Plots a scatter plot of the sleep minutes vs active minutes for a user.
+        Includes a trendline to show the relationship between sleep and activity.
+
+    print_sleep_activity_corr
+        Returns the correlation coefficient, a label and advice based on the 
+        correlation between sleep and activity for a user.
+        Labels range from strong positive to strong negative relationship.
+
+"""
+
 import pandas as pd
 import sqlite3
 import matplotlib.pyplot as plt

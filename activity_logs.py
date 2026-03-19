@@ -1,3 +1,38 @@
+"""
+
+This script provides functions for sleep analysis and visualization.
+
+The file contains the following functions:
+
+    get_gobal_activity
+        Returns a cleaned dataframe of the the total # of activity minutes each user had. 
+        Keeps track of total, very, fairly and light active minutes.
+
+    get_user_activity
+        Returns a cleaned dataframe of the # of active minutes a user has per day
+        Keeps track of total, very, fairly and light active minutes.
+
+    get_daily_activity_all_users
+        Returns a cleaned dataframe of the # of active minute each user has had for each day
+        Keeps track of total, very, fairly and light active minutes.
+
+    bar_average_activity_week
+        plots the average activity of a user per day of the week against the global average activity
+
+    plot_global_activity_4_weeks
+        Plots the total active minutes of all the users over the last 4 weeks
+        Keeps track and can be viewed by total, very, fairly and light active minutes.
+
+    plot_user_activity_4_weeks
+        Plots the activity over the last 4 weeks of the user
+        Keeps track and can be viewed by total, very, fairly and light active minutes.
+
+    get_5_best_days
+        returns the top 5 days where the user has had the most activity
+
+"""
+
+
 import pandas as pd
 import sqlite3
 import matplotlib.pyplot as plt
@@ -75,22 +110,22 @@ def plot_global_activity_4_weeks(activity_all_users_df, view_by):
 
     if view_by == "Total activity":
         activity = 'daily_active_minutes'
-        daily_summary = df_recent.groupby('ActivityDate')['daily_active_minutes'].mean().reset_index()
+        daily_summary = df_recent.groupby('ActivityDate')['daily_active_minutes'].sum().reset_index()
         title = f"Total activity minutes over the last 4 weeks"
 
     elif view_by == "Very active activity":
         activity = 'VeryActiveMinutes'
-        daily_summary = df_recent.groupby('ActivityDate')['VeryActiveMinutes'].mean().reset_index()
+        daily_summary = df_recent.groupby('ActivityDate')['VeryActiveMinutes'].sum().reset_index()
         title = f"Very active activity Minutes over the last 4 weeks"
         
     elif view_by == "Fairly active activity":
         activity = 'FairlyActiveMinutes'
-        daily_summary = df_recent.groupby('ActivityDate')['FairlyActiveMinutes'].mean().reset_index()
+        daily_summary = df_recent.groupby('ActivityDate')['FairlyActiveMinutes'].sum().reset_index()
         title = f"Fairly active activity Minutes over the last 4 weeks"
 
     elif view_by == "Light Activity":
         activity = 'LightlyActiveMinutes'
-        daily_summary = df_recent.groupby('ActivityDate')['LightlyActiveMinutes'].mean().reset_index()
+        daily_summary = df_recent.groupby('ActivityDate')['LightlyActiveMinutes'].sum().reset_index()
         title = f"Light active activity Minutes over the last 4 weeks"
 
     fig = px.line(daily_summary, x='ActivityDate', y=activity, title=title, markers=True)
@@ -135,22 +170,22 @@ def plot_user_activity_4_weeks(user_id, activity_all_users_df, view_by):
 
     if view_by == "Total activity":
         activity = 'daily_active_minutes'
-        daily_summary = complete_df.groupby('ActivityDate')['daily_active_minutes'].mean().reset_index()
+        daily_summary = complete_df.groupby('ActivityDate')['daily_active_minutes'].sum().reset_index()
         title = f"Total activity minutes over the last 4 weeks of user {user_id}"
 
     elif view_by == "Very active activity":
         activity = 'VeryActiveMinutes'
-        daily_summary = complete_df.groupby('ActivityDate')['VeryActiveMinutes'].mean().reset_index()
+        daily_summary = complete_df.groupby('ActivityDate')['VeryActiveMinutes'].sum().reset_index()
         title = f"Very Active Minutes over the last 4 weeks of user {user_id}"
         
     elif view_by == "Fairly active activity":
         activity = 'FairlyActiveMinutes'
-        daily_summary = complete_df.groupby('ActivityDate')['FairlyActiveMinutes'].mean().reset_index()
+        daily_summary = complete_df.groupby('ActivityDate')['FairlyActiveMinutes'].sum().reset_index()
         title = f"Fairly Active Minutes over the last 4 weeks of user {user_id}"
 
     elif view_by == "Light Activity":
         activity = 'LightlyActiveMinutes'
-        daily_summary = complete_df.groupby('ActivityDate')['LightlyActiveMinutes'].mean().reset_index()
+        daily_summary = complete_df.groupby('ActivityDate')['LightlyActiveMinutes'].sum().reset_index()
         title = f"Light Active Minutes over the last 4 weeks of user {user_id}"
     
     # DEBUG: cant find data

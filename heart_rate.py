@@ -216,52 +216,30 @@ def plot_hr_zones(df, Id, view_by):
 
 def mean_HR_per_group_compared_to_id(df, Id, selected):
     """
-           Plots the mean heart rate per hour of a selected user and compare to the mean heart rate per hour
-           of selected user classes.
-
-           Args:
-               df: heart rate dataframe containing "Id", "Time", and "Value"
-               Id: The Id of the user to analyze
-               selected: Determines which classes to compare to
-
-           Returns:
-                plotly figure object
-           """
-
-    # Get report to know the class of each Id
+        Plots the mean heart rate per hour of a selected user and compare to the mean heart rate per hour
+        of selected user classes.
+    """
     report = classify_users()
     report["Id"] = report["Id"].astype(str)
-
     heart_rate_df = df.copy()
-
-    # Extract the hour of the dates
     heart_rate_df["Hour"] = heart_rate_df["Time"].dt.hour
 
-    # Calculate mean heart rate per user for each hour of the day
     hourly_mean_HR_per_user = heart_rate_df.groupby(["Id", "Hour"]).mean().reset_index()
-
-    # Merge heart rate dataframe with report on Id
     hourly_mean_HR_per_user = hourly_mean_HR_per_user.merge(report, on = "Id", how= "inner")
-
-    # Calculate the hourly mean for each class
     hourly_mean_HR = hourly_mean_HR_per_user.groupby(["Class", "Hour"]).mean().reset_index()
 
-    # Compute hourly mean heart rate for given Id
     id_mean = hourly_mean_HR_per_user[hourly_mean_HR_per_user["Id"] == str(Id)].copy()
     if id_mean.empty:
         st.write("No heart rate data available for this user")
         return
     id_mean["Class"] = "Id"
 
-    # Create a dataframe containing only the selected groups
     selected_df = hourly_mean_HR[hourly_mean_HR["Class"].isin(selected)]
     selected_df = pd.concat([selected_df, id_mean])
 
-    # Create colorscheme
     colors = {"Light": px.colors.sequential.Blues[1], "Moderate": px.colors.sequential.Blues[3],
               "Heavy": px.colors.sequential.Blues[5], "Id": px.colors.sequential.Blues[7]}
 
-    # Line plot of heart rate means
     fig = px.line(selected_df,
                   height = 470,
                   x = "Hour",

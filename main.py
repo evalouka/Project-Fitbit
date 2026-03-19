@@ -322,9 +322,9 @@ with id_tab:
 
             row1_col1, row1_col2 = st.columns(2)
             with row1_col1:
-                st.write("plot_mean_heart_rate(heart_rate_df, Id, view_by)")
+                plot_mean_heart_rate(heart_rate_df, Id, view_by)
             with row1_col2:
-                st.write("plot_heart_rate_vs_activity_with_intensity(heart_rate_df, hourly_activity_df, intensity_df, Id)")
+                plot_heart_rate_vs_activity_with_intensity(heart_rate_df, hourly_activity_df, intensity_df, Id)
 
             row2_col1, row2_col2 = st.columns(2)
             with row2_col1:
@@ -334,9 +334,9 @@ with id_tab:
 
             row3_col1, row3_col2 = st.columns(2)
             with row3_col1:
-                st.write("plot_hr_zones(heart_rate_df, Id, view_by)")
+                plot_hr_zones(heart_rate_df, Id, view_by)
             with row3_col2:
-                st.write("mean_HR_per_group_compared_to_id(heart_rate_df, Id, selected)")
+                mean_HR_per_group_compared_to_id(heart_rate_df, Id, selected)
 
             row4_col1, row4_col2 = st.columns(2)
             with row4_col1:
@@ -351,7 +351,7 @@ with id_tab:
 
             row1_col1, row1_col2 = st.columns(2)
             with row1_col1:
-                st.write("plot_regression_calories(daily_activity_df, Id)")
+                plot_regression_calories(daily_activity_df, Id)
             with row2_col1:
                 plot_calories_by_block_per_id(Id)
 

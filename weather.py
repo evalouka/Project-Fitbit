@@ -13,8 +13,6 @@ import numpy as np
 import statsmodels.api as sm
 import streamlit as st
 import plotly.express as px
-from anaconda_project.internal.cli.activate import activate
-
 
 def plot_weather_vs_activity_per_id(df1, df2, Id, choose):
     """

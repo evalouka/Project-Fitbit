@@ -362,17 +362,23 @@ with id_tab:
             id_sleep_minutes = get_users_sleep_minutes(Id, sleep_df)['duration_minutes']
             best_sleep_day = get_users_sleep_minutes(Id, sleep_df).groupby(
                 pd.to_datetime(get_users_sleep_minutes(Id, sleep_df)['clean_date']).dt.day_name())['duration_minutes'].mean().idxmax()
-            correlation, label, advice = print_sleep_activity_corr(Id, activity_induvidual_df, sleep_df)
             
             m1, m2, m3, m4 = st.columns(4)
-            m1.metric("Nights of sleep tracked",
-                      f"{night_count}")
-            m2.metric("Average sleep per night", 
-                      f"{id_sleep_minutes.mean():.0f} minutes ({id_sleep_minutes.mean()/60:.1f} Hours)")
-            m3.metric("You get the best sleep on",
-                      f"{best_sleep_day}")
-            m4.metric(f"Your sleep/activity correlation", 
-                      f"{correlation:.2f} %")
+            sleep_data = get_users_sleep_minutes(Id, sleep_df)
+            if sleep_data.empty:
+                m1.metric("Nights of sleep tracked", "No data")
+                m2.metric("Average sleep per night", "No data")
+                m3.metric("Best sleep day", "No data")
+                m4.metric("Sleep/Activity correlation", "No data")
+            else:
+                m1.metric("Nights of sleep tracked", len(sleep_data))
+                m2.metric("Average sleep per night", f"{sleep_data['duration_minutes'].mean():.0f} min")
+                m3.metric("Best sleep day", sleep_data.groupby(pd.to_datetime(sleep_data['clean_date']).dt.day_name())['duration_minutes'].mean().idxmax())
+                correlation, label, advice = print_sleep_activity_corr(Id, activity_induvidual_df, sleep_df)
+                if correlation is not None:
+                    m4.metric("Sleep/Activity correlation", f"{correlation:.2f}")
+                else:
+                    m4.metric("Sleep/Activity correlation", "N/A")
 
             row1_col1, row1_col2 = st.columns(2)
             with row1_col1:

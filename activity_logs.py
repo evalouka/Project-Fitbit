@@ -74,12 +74,12 @@ def bar_average_activity_week(Id, activity_all_users_df):
                  labels={'daily_active_minutes': 'Avg Active Minutes'}
                  )
     
-    fig.update_traces(marker_color="#2c7da0", name="Average User Activity", showlegend=True, marker_line_color="white", marker_line_width=1)
+    fig.update_traces(marker_color=px.colors.sequential.Blues[7], name="Average User Activity", showlegend=True, marker_line_color="white", marker_line_width=1)
 
     line = px.line(global_avg, x='DayOfWeek', y='daily_active_minutes')
     line_trace = line.data[0]
     line_trace.update(name='Global Average Activity',
-                  line=dict(color="#3C27C6", width=4), showlegend=True)
+                  line=dict(color=px.colors.sequential.Blues[4], width=4), showlegend=True)
 
     fig.add_trace(line_trace)
 
@@ -200,7 +200,7 @@ def plot_user_activity_4_weeks(user_id, activity_all_users_df, view_by):
 
     fig = px.line(daily_summary, x='ActivityDate', y=activity, title=title, markers=True)
 
-    fig.update_traces(line=dict(color="#3557d4", width=2), fill='tozeroy', fillcolor="rgba(53, 87, 212, 0.6)")
+    fig.update_traces(line=dict(color=px.colors.sequential.Blues[0], width=2), fill='tozeroy', fillcolor=px.colors.sequential.Blues[7])
 
     fig.update_layout(paper_bgcolor="rgba(0,0,0,0)",
                       plot_bgcolor="rgba(0,0,0,0)",

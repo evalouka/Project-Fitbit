@@ -48,12 +48,12 @@ def plot_user_vs_global_calories(Id, calories_df, view_by):
         title = f"Calories burned by user {Id} - all available data"
 
     fig = px.bar(filtered_user, x='ActivityDate', y='Calories', title=title)
-    fig.update_traces(marker_color="#2c7da0", name="User Calories", showlegend=True)
+    fig.update_traces(marker_color=px.colors.sequential.Blues[7], name="User Calories", showlegend=True)
 
     line = px.line(filtered_global, x='ActivityDate', y='average_calories')
     line_trace = line.data[0]
     line_trace.update(name='Global Average',
-                  line=dict(color="#3C27C6", width=4), showlegend=True)
+                  line=dict(color=px.colors.sequential.Blues[4], width=4), showlegend=True)
 
     fig.add_trace(line_trace)
 

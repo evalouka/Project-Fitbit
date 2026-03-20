@@ -70,7 +70,7 @@ def get_average_sleep(Id, sleep_df, view_by):
 
     fig = px.bar(plot_df, x=x_col, y='duration_minutes', title=title)
 
-    fig.update_traces(marker_color="#6d62c4",marker_line_color="white", marker_line_width=1.5)
+    fig.update_traces(marker_color=px.colors.sequential.Blues[7], marker_line_color="white", marker_line_width=1.5)
 
     fig.update_layout(paper_bgcolor="rgba(0,0,0,0)",
                       plot_bgcolor="rgba(0,0,0,0)",
@@ -123,9 +123,9 @@ def plot_sleep_vs_heartrate(user_id, sleep_df, heart_rate_df):
                      title=f"Sleep vs Heart Rate for user {user_id}",
                      trendline="ols")
 
-    fig.update_traces(marker=dict(color="#6d62c4", size=10),
+    fig.update_traces(marker=dict(color=px.colors.sequential.Blues[8], size=10),
                       selector=dict(mode='markers'))
-    fig.update_traces(line=dict(color="#54b8fa", width=3),
+    fig.update_traces(line=dict(color=px.colors.sequential.Blues[6], width=3),
                       selector=dict(mode='lines'))
 
     fig.update_layout(paper_bgcolor="rgba(0,0,0,0)",

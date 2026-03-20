@@ -29,8 +29,8 @@ def plot_avg_intensity_per_hour(intensity_df):
         x=hourly_avg.index,
         y=hourly_avg["AverageIntensity"],
         mode="lines+markers",
-        marker=dict(color="dodgerblue"),
-        line=dict(color="dodgerblue"),
+        marker=dict(color=px.colors.sequential.Blues[7]),
+        line=dict(color=px.colors.sequential.Blues[7]),
         name="Avg Intensity"
     ))
     fig.update_layout(
@@ -74,7 +74,7 @@ def plot_steps_vs_intensity(intensity_df, hourly_steps_df, user_id):
         x="StepTotal",
         y="AverageIntensity",
         opacity=0.4,
-        color_discrete_sequence=["royalblue"],
+        color_discrete_sequence=[px.colors.sequential.Blues[7]],
         title=f"Steps vs average intensity for user {user_id}",
         labels={"StepTotal": "Steps", "AverageIntensity": "Avg Intensity"}
     )
@@ -93,8 +93,8 @@ def plot_intensity_by_hour_for_id(intensity_df, user_id):
         x=hourly_avg.index,
         y=hourly_avg.values,
         mode="lines+markers",
-        marker=dict(color="royalblue"),
-        line=dict(color="royalblue"),
+        marker=dict(color=px.colors.sequential.Blues[7]),
+        line=dict(color=px.colors.sequential.Blues[7]),
         name=f"User {user_id}"
     ))
     fig.update_layout(
@@ -119,7 +119,7 @@ def plot_intensity_by_dow_for_id(intensity_df, user_id):
     fig.add_trace(go.Bar(
         x=dow_avg.index.tolist(),
         y=dow_avg.values,
-        marker_color="royalblue"
+        marker_color= px.colors.sequential.Blues[7]
     ))
     fig.update_layout(
         title=f"Average intensity by day of week — User {user_id}",

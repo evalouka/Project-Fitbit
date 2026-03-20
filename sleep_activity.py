@@ -52,11 +52,11 @@ def individual_sleep_activity_corr(user_id, activity_induvidual_df, sleep_df):
                       font_color="Black")
     
     fig.update_traces(
-        marker=dict(color="#A960DA", size=10, symbol='circle'),
+        marker=dict(color=px.colors.sequential.Blues[8], size=10, symbol='circle'),
         selector=dict(mode='markers'))
     
     fig.update_traces(
-        line=dict(color="#B3617B", width=3),
+        line=dict(color=px.colors.sequential.Blues[6], width=3),
         selector=dict(mode='lines'))
 
     st.plotly_chart(fig)

@@ -73,8 +73,11 @@ def print_sleep_activity_corr(user_id, activity_induvidual_df, sleep_df):
     
     df_combined = pd.merge(df_sleep, df_active, on="get_date")
     
+    if df_sleep.empty or df_active.empty:
+        return "N/A", "No data available", "No sleep or activity data found for this user."
+
     if df_combined.empty:
-        return None, "No data"
+        return "N/A", "No data available", "No overlapping dates found for sleep and activity data."
     
     correlation = df_combined['active_minutes'].corr(df_combined['duration_minutes'])
 

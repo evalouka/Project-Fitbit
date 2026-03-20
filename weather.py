@@ -14,7 +14,6 @@ import statsmodels.api as sm
 import streamlit as st
 import plotly.express as px
 
-
 def plot_weather_vs_activity_per_id(df1, df2, Id, choose):
     """
         Create a figure that fits an OLS regression model with TotalSeps as response variable, Precipitation

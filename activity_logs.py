@@ -1,6 +1,6 @@
 """
 
-This script provides functions for sleep analysis and visualization.
+This script provides functions for activity analysis and visualization.
 
 The file contains the following functions:
 
@@ -130,7 +130,7 @@ def plot_global_activity_4_weeks(activity_all_users_df, view_by):
 
     fig = px.line(daily_summary, x='ActivityDate', y=activity, title=title, markers=True)
     
-    fig.update_traces(line=dict(color="#62c4bc", width=2), fill='tozeroy', fillcolor='rgba(98, 196, 188, 0.2)')
+    fig.update_traces(line=dict(color="#3557d4", width=2), fill='tozeroy', fillcolor="rgba(53, 87, 212, 0.6)")
 
     fig.update_layout(paper_bgcolor="rgba(0,0,0,0)",
                       plot_bgcolor="rgba(0,0,0,0)",
@@ -200,7 +200,7 @@ def plot_user_activity_4_weeks(user_id, activity_all_users_df, view_by):
 
     fig = px.line(daily_summary, x='ActivityDate', y=activity, title=title, markers=True)
 
-    fig.update_traces(line=dict(color="#62c4bc", width=2), fill='tozeroy', fillcolor='rgba(98, 196, 188, 0.2)')
+    fig.update_traces(line=dict(color="#3557d4", width=2), fill='tozeroy', fillcolor="rgba(53, 87, 212, 0.6)")
 
     fig.update_layout(paper_bgcolor="rgba(0,0,0,0)",
                       plot_bgcolor="rgba(0,0,0,0)",

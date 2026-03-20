@@ -356,25 +356,26 @@ with id_tab:
 
         if section == "Sleep":
             
-            night_count = len(get_users_sleep_minutes(Id, sleep_df))
-            id_sleep_minutes = get_users_sleep_minutes(Id, sleep_df)['duration_minutes']
-            best_sleep_day = get_users_sleep_minutes(Id, sleep_df).groupby(
-                pd.to_datetime(get_users_sleep_minutes(Id, sleep_df)['clean_date']).dt.day_name())['duration_minutes'].mean().idxmax()
-            
             m1, m2, m3, m4 = st.columns(4)
             sleep_data = get_users_sleep_minutes(Id, sleep_df)
+            correlation, label, advice = print_sleep_activity_corr(Id, activity_induvidual_df, sleep_df)
             if sleep_data.empty:
                 m1.metric("Nights of sleep tracked", "No data")
                 m2.metric("Average sleep per night", "No data")
                 m3.metric("Best sleep day", "No data")
                 m4.metric("Sleep/Activity correlation", "No data")
             else:
+                night_count = len(get_users_sleep_minutes(Id, sleep_df))
+                id_sleep_minutes = get_users_sleep_minutes(Id, sleep_df)['duration_minutes']
+                best_sleep_day = get_users_sleep_minutes(Id, sleep_df).groupby(
+                    pd.to_datetime(get_users_sleep_minutes(Id, sleep_df)['clean_date']).dt.day_name())['duration_minutes'].mean().idxmax()
+                
                 m1.metric("Nights of sleep tracked", len(sleep_data))
-                m2.metric("Average sleep per night", f"{sleep_data['duration_minutes'].mean():.0f} min")
-                m3.metric("Best sleep day", sleep_data.groupby(pd.to_datetime(sleep_data['clean_date']).dt.day_name())['duration_minutes'].mean().idxmax())
-                correlation, label, advice = print_sleep_activity_corr(Id, activity_induvidual_df, sleep_df)
+                m2.metric("Average sleep per night", f"{id_sleep_minutes.mean():.0f} min ({id_sleep_minutes.mean()/60:.1f} Hours)")
+                m3.metric("You get your best sleep on", sleep_data.groupby(pd.to_datetime(sleep_data['clean_date']).dt.day_name())['duration_minutes'].mean().idxmax())
                 if correlation is not None:
-                    m4.metric("Sleep/Activity correlation", f"{correlation:.2f}")
+                    m4.metric("Your Sleep/Activity correlation",
+                               f"{correlation:.2f} %")
                 else:
                     m4.metric("Sleep/Activity correlation", "N/A")
 
@@ -382,10 +383,10 @@ with id_tab:
             with row1_col1:
                 individual_sleep_activity_corr(Id, activity_induvidual_df, sleep_df)
                 st.markdown(f"""
-                                                                           <div style="background-color: rgba(109, 98, 196, 0.2); padding: 1rem; border-radius: 0.5rem;">
-                                                                           <b style="color: #A960DA;">{label}</b><br><br>{advice}
-                                                                           <p style="text-align: right; margin: 0.5rem 0 0 0;"><small style="color: gray;">*Only based on dates with both activity and sleep data</small></p>
-                                                                           </div>""", unsafe_allow_html=True)
+                            <div style="background-color: rgba(109, 98, 196, 0.2); padding: 1rem; border-radius: 0.5rem;">
+                            <b style="color: #A960DA;">{label}</b><br><br>{advice}
+                            <p style="text-align: right; margin: 0.5rem 0 0 0;"><small style="color: gray;">*Only based on dates with both activity and sleep data</small></p>
+                            </div>""", unsafe_allow_html=True)
             with row1_col2:
                 plot_sleep_vs_heartrate(Id, sleep_df, heart_rate_df)
 

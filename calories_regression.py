@@ -10,17 +10,14 @@ import streamlit as st
 import numpy as np
 import plotly.express as px
 
-def plot_regression_calories(df, Id):
+def plot_regression_calories(df, user_id):
     """
        Create a figure that fits an OLS regression model with Calories as response variable, TotalSteps as an
        independent variable, and Id as factor that affects the intercept of the regression line.
 
        Args:
            df: activity dataframe containing "Id", "Calories", and "TotalSteps"
-           Id: The Id of the user to analyze
-
-       Returns:
-          Plotly figure object
+           user_id: The Id of the user to analyze
        """
 
     # Store calories in response variable y
@@ -30,10 +27,10 @@ def plot_regression_calories(df, Id):
     x = df[["TotalSteps"]]
 
     # Filter data for given Id
-    df_id = df[df["Id"] == Id]
+    df_id = df[df["Id"] == user_id]
 
     if df_id.empty:
-        st.write("No calories data available")
+        st.info("No calories data available for this user")
         return
 
     # Add dummy columns to account for ID factor
@@ -49,7 +46,7 @@ def plot_regression_calories(df, Id):
 
     # Compute base intercept and the id variable to compute the intercept for a given ID
     base = results.params["const"]
-    id_variable = results.params.get(Id,0.0)
+    id_variable = results.params.get(user_id,0.0)
     intercept = base + id_variable
 
     # Compute the slope of the regression line
@@ -63,7 +60,7 @@ def plot_regression_calories(df, Id):
                      x= "TotalSteps",
                      y="Calories",
                      color_discrete_sequence=[px.colors.sequential.Blues[2]],
-                     title=f"Calories vs Total Steps for user {Id}")
+                     title=f"Calories vs Total Steps for user {user_id}")
 
     fig.add_scatter(x=x_line,
                     y=y_line,

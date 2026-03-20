@@ -13,6 +13,8 @@ import numpy as np
 import statsmodels.api as sm
 import streamlit as st
 import plotly.express as px
+from anaconda_project.internal.cli.activate import activate
+
 
 def plot_weather_vs_activity_per_id(df1, df2, Id, choose):
     """
@@ -94,26 +96,24 @@ def plot_weather_vs_activity_per_id(df1, df2, Id, choose):
     st.plotly_chart(fig)
 
 
-def plot_weather_vs_activity(df1, df2, choose):
+def plot_weather_vs_activity(weather_data, activity_data, choose):
     """
-        Create a figure that fits an OLS regression model with TotalSeps as response variable, and Precipitation
+        Create a figure that fits an OLS regression model with TotalSteps as response variable, and Precipitation
         or Temperature as an independent variable (depending on choose).
 
         Args:
-            Args:
-            df1: weather dataframe containing "datetime", "temp", and "precip"
-            df2: activity dataframe containing "Id", "ActivityDate", and "TotalSteps"
+            weather_data: weather dataframe containing "datetime", "temp", and "precip"
+            activity_data: activity dataframe containing "Id", "ActivityDate", and "TotalSteps"
             choose: determines to compare TotalSteps to Temperature or Precipitation
 
-        Returns:
-            Plotly figure object
         """
 
     # Merge the dataframes
-    merged_df = pd.merge(df1, df2, left_on="datetime", right_on="ActivityDate")
+    merged_df = pd.merge(weather_data, activity_data, left_on="datetime", right_on="ActivityDate")
 
     if merged_df.empty:
-        st.write("No activity data available")
+        st.info("No activity data available")
+        return
 
     # Set y to response variable TotalSteps for regression
     y = merged_df["TotalSteps"]
@@ -147,8 +147,8 @@ def plot_weather_vs_activity(df1, df2, choose):
     fig = px.scatter(merged_df,
                     x=x,
                     y= "TotalSteps",
-                    opacity= 0.2,
-                    color_discrete_sequence=[px.colors.sequential.Blues[2]],
+                    opacity= 0.1,
+                    color_discrete_sequence=[px.colors.sequential.Blues[1]],
                     title= title)
 
     fig.add_scatter(x = means[x],
@@ -160,14 +160,14 @@ def plot_weather_vs_activity(df1, df2, choose):
     fig.add_scatter(x= x_line,
                    y = y_line,
                    mode ="lines",
-                   line= dict(color= px.colors.sequential.Blues[7]),
+                   line= dict(color= px.colors.sequential.Blues[8]),
                    name = "Regression")
 
     fig.update_layout(height = 450,
                      paper_bgcolor="rgba(0,0,0,0)",
                      plot_bgcolor="rgba(0,0,0,0)",
                      xaxis_title=xlabel,
-                     yaxis_title="Total Steps",
+                     yaxis_title="Total steps per day",
                      font_color="white")
 
     st.plotly_chart(fig)

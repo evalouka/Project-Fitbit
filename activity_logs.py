@@ -224,9 +224,3 @@ def get_5_best_days(user_id, activity_induvidual_df):
                            .format({'Active minutes': '{:.0f} min'})
 
     st.table(final_df)
-
-#view_by = "Total activity"
-#Id = 4319703577
-#con = sqlite3.connect(r"C:\Users\jonge\PycharmProjects\Data Engineering\Project-Fitbit\fitbit_database.db")
-#plot_user_activity_4_weeks(Id, con, view_by)
-#bar_average_activity_week(Id, con)

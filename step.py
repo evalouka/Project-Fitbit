@@ -55,7 +55,7 @@ def plot_steps_by_block_per_id(selected_id, hourly_activity_df):
     fig = go.Figure(go.Bar(
         x=list(avg.index),
         y=list(avg.values),
-        marker_color=px.colors.sequential.Blues[6],
+        marker_color=px.colors.sequential.Blues[7],
         marker_line_color="white",
         marker_line_width=1.5
     ))
@@ -117,7 +117,7 @@ def plot_sleep_sedentary_correlation(selected_id, daily_activity_df, daily_sleep
     fig.add_trace(go.Scatter(
         x=X, y=y,
         mode='markers',
-        marker=dict(color='steelblue', opacity=0.5, size=7),
+        marker=dict(color=px.colors.sequential.Blues[8], size=7),
         name='Data'
     ))
     fig.add_trace(go.Scatter(
@@ -157,7 +157,7 @@ def plot_sleep_by_block_per_id(sleep_data, selected_id):
     fig = go.Figure(go.Bar(
         x=list(avg.index),
         y=list(avg.values),
-        marker_color=px.colors.sequential.Blues[6],
+        marker_color=px.colors.sequential.Blues[7],
         marker_line_color="white",
         marker_line_width=1.5
     ))
@@ -190,7 +190,7 @@ def plot_calories_by_block_per_id(calories_data, selected_id):
     fig = go.Figure(go.Bar(
         x=list(avg.index),
         y=list(avg.values),
-        marker_color= px.colors.sequential.Blues[6],
+        marker_color= px.colors.sequential.Blues[7],
         marker_line_color="white",
         marker_line_width=1.5
     ))

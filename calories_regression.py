@@ -59,13 +59,13 @@ def plot_regression_calories(df, user_id):
     fig = px.scatter(df_id,
                      x= "TotalSteps",
                      y="Calories",
-                     color_discrete_sequence=[px.colors.sequential.Blues[2]],
+                     color_discrete_sequence=[px.colors.sequential.Blues[8]],
                      title=f"Calories vs Total Steps for user {user_id}")
 
     fig.add_scatter(x=x_line,
                     y=y_line,
                     mode="lines",
-                    line=dict(color=px.colors.sequential.Blues[7]),
+                    line=dict(color=px.colors.sequential.Blues[6]),
                     name="Regression")
 
     fig.update_layout(height=450,

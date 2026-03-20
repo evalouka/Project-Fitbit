@@ -188,6 +188,8 @@ def load_daily_sleep_data():
                    .reset_index(name="TotalMinutesAsleep"))
     daily_sleep["SleepDay"] = pd.to_datetime(daily_sleep["SleepDay"])
     return daily_sleep
+
+@st.cache_data
 def load_sleep_data():
     sleep_query = "SELECT Id, TRIM(SUBSTR(date, 1, INSTR(date, ' '))) as clean_date, value FROM minute_sleep WHERE value >= 1"
     df = pd.read_sql_query(sleep_query, connection)
@@ -317,10 +319,6 @@ with id_tab:
             with row1_col2:
                 individual_sleep_activity_corr(Id, activity_induvidual_df, sleep_df)
 
-            row2_col1, row2_col2 = st.columns(2)
-            with row2_col1:
-                view_by = st.radio("View by", ["Hour", "Day"], horizontal=True, key="hr_mean_general_tab", index=1)
-                st.write((sleep_df[sleep_df['Id'] == str(Id)].groupby('clean_date').size().reset_index(name='minutes')).count)
 
             row3_col1, row3_col2 = st.columns(2)
             with row3_col1:
@@ -383,24 +381,28 @@ with id_tab:
                 plot_sleep_sedentary_correlation(Id, daily_activity_df, daily_sleep_df)
 
             view_col_1, view_col_2 =st.columns(2)
-            with view_col_1:
-                st.markdown(f"""
-                            <div style="background-color: rgba(109, 98, 196, 0.2); padding: 1rem; border-radius: 0.5rem;">
-                            <b style="color: #A960DA;">{label}</b><br><br>{advice}
-                            <p style="text-align: right; margin: 0.5rem 0 0 0;"><small style="color: gray;">*Only based on dates with both activity and sleep data</small></p>
-                            </div>""", unsafe_allow_html=True)
             with view_col_2:
-                st.markdown("<br><br><br>", unsafe_allow_html=True)
-                _, subcol = st.columns([2, 1])
-
-                with subcol:
-                    view_by = st.radio("View by", ["Day", "Week"], horizontal=True, key="avg_sleep")
+                view_by = st.radio("View by", ["Day", "Week"], horizontal=True, key="avg_sleep")
             
             row2_col1, row2_col2 = st.columns(2)
             with row2_col1:
-                plot_sleep_by_block_per_id(minutes_sleep_df, Id)
+                st.markdown(f"""
+                                                           <div style="background-color: rgba(109, 98, 196, 0.2); padding: 1rem; border-radius: 0.5rem;">
+                                                           <b style="color: #A960DA;">{label}</b><br><br>{advice}
+                                                           <p style="text-align: right; margin: 0.5rem 0 0 0;"><small style="color: gray;">*Only based on dates with both activity and sleep data</small></p>
+                                                           </div>""", unsafe_allow_html=True)
             with row2_col2:
+                plot_sleep_vs_heartrate(Id, sleep_df, heart_rate_df)
+
+
+            row3_col1, row3_col2 = st.columns(2)
+            with row3_col1:
                 get_average_sleep(Id, sleep_df, view_by)
+
+
+            with row3_col2:
+                plot_sleep_by_block_per_id(minutes_sleep_df, Id)
+
 
         if section == "Heart rate":
             m1, m2, m3, m4 = st.columns(4)
@@ -429,9 +431,6 @@ with id_tab:
             with row3_col2:
                 mean_HR_per_group_compared_to_id(heart_rate_df, Id, selected)
 
-            row4_col1, row4_col2 = st.columns(2)
-            with row4_col1:
-                plot_sleep_vs_heartrate(Id, sleep_df, heart_rate_df)
 
         if section == "Calories":
             avg_cal, max_cal, global_avg, vs_avg_pct = get_calories_metrics(daily_activity_df, Id)

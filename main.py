@@ -176,7 +176,7 @@ with general_tab:
     
     view_col_1, view_col_2 = st.columns(2)
     with view_col_1:
-            view_by = st.radio("View by", ["Total activity", "Very active activity", "Fairly active activity", "Light Activity"], horizontal=True, key="glo_activity", index=1)
+            view_by = st.selectbox("View by", ["Total activity", "Very active activity", "Fairly active activity", "Light Activity"], key="glo_activity", index=1)
     
     row1_col1, row1_col2 = st.columns(2)
     with row1_col1:
@@ -222,7 +222,7 @@ with id_tab:
 
             view_col_1, view_col_2 = st.columns(2)
             with view_col_1:
-                view_by = st.radio("View by", ["Total activity", "Very active activity", "Fairly active activity", "Light active ctivity"], horizontal=True, key="ind_activity", index=1)
+                view_by = st.selectbox("View by", ["Total activity", "Very active activity", "Fairly active activity", "Light active ctivity"], key="ind_activity", index=1)
 
             row1_col1, row1_col2 = st.columns(2)
             with row1_col1:
@@ -257,7 +257,7 @@ with id_tab:
 
             view_col_1, view_col_2 = st.columns(2)
             with view_col_1:
-                view_by = st.radio("View by", ["Total activity", "Very active activity", "Fairly active activity", "Light Activity"], horizontal=True, key="indv_activity", index=1)
+                view_by = st.selectbox("View by", ["Total activity", "Very active activity", "Fairly active activity", "Light Activity"], key="indv_activity", index=1)
 
             row1_col1, row1_col2 = st.columns(2)
             with row1_col1:
@@ -303,7 +303,11 @@ with id_tab:
                             <p style="text-align: right; margin: 0.5rem 0 0 0;"><small style="color: gray;">*Only based on dates with both activity and sleep data</small></p>
                             </div>""", unsafe_allow_html=True)
             with view_col_2:
-                view_by = st.radio("View by", ["Day", "Week"], horizontal=True, key="avg_sleep", index=1)
+                st.markdown("<br><br><br>", unsafe_allow_html=True)
+                _, subcol = st.columns([2, 1])
+
+                with subcol:
+                    view_by = st.radio("View by", ["Day", "Week"], horizontal=True, key="avg_sleep")
             
             row2_col1, row2_col2 = st.columns(2)
             with row2_col1:

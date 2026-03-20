@@ -49,7 +49,8 @@ def individual_sleep_activity_corr(user_id, activity_induvidual_df, sleep_df):
                       plot_bgcolor="rgba(0,0,0,0)",
                       xaxis_title="Sleep minutes",
                       yaxis_title="Active minutes",
-                      font_color="Black")
+                      font_color="Black",
+                      height = 475)
     
     fig.update_traces(
         marker=dict(color=px.colors.sequential.Blues[8], size=10, symbol='circle'),

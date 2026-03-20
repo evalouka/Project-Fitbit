@@ -1,93 +1,135 @@
-# 🏃 Fitbit Data Analysis Dashboard
+Fitbit Data Analysis Dashboard
 
-A data analysis project that explores Fitbit usage data collected from 33 participants in 2016. The project covers statistical analysis, data visualization, database querying, and an interactive dashboard built with Streamlit.
+A data analysis project that explores Fitbit usage data collected from 35 participants in 2016. The project covers statistical analysis, data visualization, database querying, and an interactive dashboard built with Streamlit.
 
----
 
-## 📌 Project Overview
+
+## Project Overview
 
 This project was developed as part of a university assignment. Using real-world Fitbit data, we investigate the activity, sleep, and health patterns of survey participants. The final product is an interactive dashboard aimed at business analysts and the study participants themselves.
 
 The project is divided into 5 parts:
 
-- **Part 1** – Exploratory data analysis on daily activity data
-- **Part 2** – GitHub version control setup and collaboration
-- **Part 3** – Database querying and multi-table analysis
-- **Part 4** – Data wrangling, merging, and aggregation
-- **Part 5** – Interactive Streamlit dashboard
+- *Part 1* – Exploratory data analysis on daily activity data
+- *Part 2* – GitHub version control setup and collaboration
+- *Part 3* – Database querying and multi-table analysis
+- *Part 4* – Data wrangling, merging, and aggregation
+- *Part 5* – Interactive Streamlit dashboard
+![img.png](img.png)
 
----
+## Project Structure
 
-## 📁 Project Structure
-```
 Project-Fitbit/
 │
-├── data/
-│   ├── daily_activity.csv          # Daily activity per user
-│   └── fitbit_database.db          # SQLite database with all Fitbit tables
+├── main.py                          # Entry point of the application
 │
-├── part1/                          # Exploratory analysis scripts
-├── part3/                          # Database analysis scripts
-├── part4/                          # Data wrangling scripts
-├── part5/                          # Streamlit dashboard
+├── # --- Analysis Modules ---
+├── activity_logs.py                 # Activity log processing
+├── calories.py                      # Calorie data analysis
+├── calories_regression.py           # Calorie regression modeling
+├── heart_rate.py                    # Heart rate data processing
+├── heart_rate_vs_exercise_intensity.py  # Heart rate vs. intensity analysis
+├── intensity.py                     # Intensity metrics
+├── minutes_distribution.py          # Activity minutes distribution
+├── sleep.py                         # Sleep data processing
+├── sleep_activity.py                # Sleep & activity correlation
+├── step.py                          # Step count analysis
+
+├── user_classification.py           # User segmentation/classification
+├── weather.py                       # Weather data integration
 │
-└── README.md                       # You are here
-```
+├── # --- Visualizations (Generated) ---
+├── calories_by_block.png
+├── calories_regression.png  (residuals_histogram, qq_plot, sedentary_sleep_regression)
+├── intensity_analysis.png   (plot1–plot5, steps_vs_intensity, etc.)
+├── sleep_by_block.png
+├── steps_by_block.png
+│
+├── fitbit_database.db               # Main SQLite database
+├── README.md
+│
+├── user_data/
+│   └── outputs/
+│       ├── part3_user_classification_complete.png
+│       ├── user_classification_db.csv
+│       └── user_stats_by_class.csv
+│
+├── weather_data/
+│   └── Chicago_weather_march_april.csv
 
----
 
-## 🗄️ Dataset
 
-The data comes from 33 Fitbit users who submitted usage data via an Amazon survey in 2016. The SQLite database contains the following tables:
+
+## Dataset
+
+This project uses two data sources:
+
+### 1. Fitbit Database (fitbit_database.db)
+A SQLite database containing fitness tracking data from multiple users. It includes the following tables:
 
 | Table | Description |
-|---|---|
-| `daily_activity` | Daily steps, calories, and active minutes per user |
-| `heartrate` | Heart rate measured every 5 seconds |
-| `hourly_calories` | Calories burnt per hour |
-| `hourly_intensity` | Exercise intensity per hour |
-| `hourly_steps` | Steps taken per hour |
-| `minute_sleep` | Sleep data recorded per minute |
-| `weightlog` | Weight, fat percentage, and BMI per user |
+|-------|-------------|
+| daily_activity | Daily activity summary (steps, distance, active minutes, sedentary time) |
+| heart_rate | Heart rate measurements over time |
+| hourly_calories | Calories burned per hour |
+| hourly_intensity | Exercise intensity levels per hour |
+| hourly_steps | Step count per hour |
+| minute_sleep | Sleep tracking data per minute |
+| weight_log | User weight log entries |
+
+### 2. Weather Data (weather_data/Chicago_weather_march_april.csv)
+Daily weather data for Chicago covering March–April 2016, containing 33 features including temperature, humidity, precipitation, wind speed, UV index, and general conditions.
+
 
 ---
 
-## 📦 Requirements
+##  Requirements
 
-Make sure you have **Python 3** installed. Then install the required libraries:
-```bash
-pip install pandas numpy plotly scipy statsmodels streamlit sqlite3
-```
 
-> `sqlite3` comes built-in with Python — no separate installation needed.
+Install all dependencies with:
+bash
+pip install -r requirements.txt
+
+
+| Package | Version | Purpose |
+|------------|---------|---------|
+| matplotlib | 3.10.8 | Plotting and data visualization |
+| numpy | 2.4.3 | Numerical computations |
+| pandas | 3.0.1 | Data manipulation and analysis |
+| plotly | 6.6.0 | Interactive charts |
+| scipy | 1.17.1 | Statistical analysis and regression |
+| statsmodels | 0.14.6 | Advanced statistical modeling |
+| streamlit | 1.55.0 | Web app / dashboard interface |
 
 ---
 
-## 🚀 How to Run
+## How to Run
 
-### Run the Dashboard (Part 5)
-```bash
-streamlit run part5/dashboard.py
-```
+### 1. Install dependencies
+bash
+pip install -r requirements.txt
+
+
+### 2. Run the Dashboard
+bash
+streamlit run dashboard.py
+
+> Make sure fitbit_database.db is in the root project folder before running.
 
 ---
 
-## 📊 Part 1 – Exploratory Data Analysis
+## Project Parts
 
-This part explores `daily_activity.csv` and includes:
-
-- Count of unique users and total distance per user
-- Calories burnt per day per user (with date range filtering)
+### Part 1 – Exploratory Data Analysis
+Explores daily_activity data from the Fitbit database, including:
+- Unique user count and total distance per user
+- Calories burned per day per user (with date range filtering)
 - Workout frequency by day of the week
-- OLS regression: `Calories ~ TotalSteps + Id`
-- Regression visualization per user
+- OLS regression: Calories ~ TotalSteps + Id
+- Per-user regression visualization
 
----
-
-## 🗃️ Part 3 – Database Analysis
-
-This part connects to `fitbit_database.db` using `sqlite3` and includes:
-
+### Part 3 – Database Analysis
+Connects to fitbit_database.db via sqlite3 and includes:
 - Sleep duration analysis per user
 - Regression: active minutes vs sleep duration
 - Regression: sedentary activity vs sleep duration (with normality checks)
@@ -95,34 +137,26 @@ This part connects to `fitbit_database.db` using `sqlite3` and includes:
 - Heart rate and exercise intensity visualization per user
 - Weather data integration and activity correlation
 
----
-
-## 🔧 Part 4 – Data Wrangling
-
-This part focuses on cleaning and merging data:
-
-- Handling missing values in the `weightlog` table
-- Merging tables and grouping by individual
+### Part 4 – Data Wrangling
+Focuses on cleaning and preparing data for the dashboard:
+- Handling missing values in the weight_log table
+- Merging tables and grouping by individual user
 - Aggregating data by user, date range, and time of day
 - Preparing summaries for the dashboard
 
----
-
-## 📈 Part 5 – Dashboard
-
-The Streamlit dashboard includes:
-
-- **Home page** — general statistics and visual summaries of the dataset
-- **Individual page** — select a user ID from the sidebar to view personal statistics
-- **Time filter** — filter data by date range or time of day
-- **Sleep analysis** — explore what variables affect sleep duration
+### Part 5 – Dashboard
+An interactive Streamlit dashboard with:
+- *Home page* — general statistics and visual summaries of the dataset
+- *Individual page* — select a user ID from the sidebar to view personal stats
+- *Time filter* — filter data by date range or time of day
+- *Sleep analysis* — explore variables that affect sleep duration
 
 ---
 
-## 👥 Contributors
+## Contributors
 
-| Name | Contribution |
-|---|---|
+| Name | Role |
+|------|------|
 | Rojin Naseh | |
 | Naomi van Diermen | |
 | Eva Quist | |
@@ -130,23 +164,21 @@ The Streamlit dashboard includes:
 
 ---
 
-## 🛠️ Tools & Technologies
+## Tools & Technologies
 
-- **Python 3** — core language
-- **pandas & numpy** — data manipulation
-- **plotly & scipy** — visualizations and statistics
-- **statsmodels** — OLS regression
-- **sqlite3** — database access
-- **Streamlit** — interactive dashboard
-- **PyCharm** — development environment
-- **GitHub** — version control and collaboration
-- **Visual Studio Code** — development environment
+| Tool | Purpose |
+|------|---------|
+| Python 3 | Core language |
+| pandas & numpy | Data manipulation |
+| plotly & matplotlib | Visualizations |
+| scipy & statsmodels | Statistics and OLS regression |
+| sqlite3 | Database access |
+| Streamlit | Interactive dashboard |
+| GitHub | Version control and collaboration |
 
 ---
 
-## 📝 Notes
-
-- All scripts assume `fitbit_database.db` is available locally. Adjust the path in each script if needed.
-- The dataset covers activity from **33 Fitbit users** over several weeks in **2016**.
-- This README will be updated continuously as the project develops..
-
+## Notes
+- All scripts assume fitbit_database.db is in the root project folder. Adjust the path if needed.
+- The dataset covers activity from *33 Fitbit users* over several weeks in *2016*.
+- This README will be updated continuously as the project develops.

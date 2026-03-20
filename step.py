@@ -21,7 +21,7 @@ def plot_steps_by_block_general(hourly_activity_df):
     fig = go.Figure(go.Bar(
         x=list(avg.index),
         y=list(avg.values),
-        marker_color= px.colors.sequential.Blues[6],
+        marker_color= px.colors.sequential.Blues[7],
         marker_line_color="white",
         marker_line_width=1.5
     ))

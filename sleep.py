@@ -76,7 +76,8 @@ def get_average_sleep(Id, sleep_df, view_by):
                       plot_bgcolor="rgba(0,0,0,0)",
                       xaxis_title=xlabel,
                       yaxis_title="Sleep minutes",
-                      font_color="Black")
+                      font_color="Black",
+                      height = 450)
     
     st.plotly_chart(fig)
 
@@ -98,7 +99,7 @@ def plot_sleep_vs_heartrate(user_id, sleep_df, heart_rate_df):
     df_combined = pd.merge(df_sleep, df_hr_daily, on='clean_date')
 
     if df_combined.empty:
-        st.write("No matching dates found for sleep and heart rate data.")
+        st.info("No matching dates found for sleep and heart rate data.")
         return
     
     correlation = df_combined['duration_minutes'].corr(df_combined['avg_heart_rate'])
@@ -132,7 +133,8 @@ def plot_sleep_vs_heartrate(user_id, sleep_df, heart_rate_df):
                       plot_bgcolor="rgba(0,0,0,0)",
                       xaxis_title="Sleep minutes",
                       yaxis_title="Average heart rate (bpm)",
-                      font_color="Black")
+                      font_color="Black",
+                      height = 475)
 
     st.plotly_chart(fig, key="sleep_vs_hr_chart")
 

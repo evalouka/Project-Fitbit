@@ -83,7 +83,7 @@ def bar_average_activity_week(Id, activity_all_users_df):
 
     fig.add_trace(line_trace)
 
-    fig.update_layout(height = 400,
+    fig.update_layout(height = 450,
                       paper_bgcolor="rgba(0,0,0,0)",
                       plot_bgcolor="rgba(0,0,0,0)",
                       xaxis_title="Day of the Week",
@@ -130,13 +130,14 @@ def plot_global_activity_4_weeks(activity_all_users_df, view_by):
 
     fig = px.line(daily_summary, x='ActivityDate', y=activity, title=title, markers=True)
     
-    fig.update_traces(line=dict(color="#3557d4", width=2), fill='tozeroy', fillcolor="rgba(53, 87, 212, 0.6)")
+    fig.update_traces(line=dict(color=px.colors.sequential.Blues[0], width=2), fill='tozeroy', fillcolor=px.colors.sequential.Blues[7])
 
     fig.update_layout(paper_bgcolor="rgba(0,0,0,0)",
                       plot_bgcolor="rgba(0,0,0,0)",
                       xaxis_title= xlabel,
                       yaxis_title= "Activity minutes",
-                      font_color="Black")
+                      font_color="Black",
+                      height = 450)
     
     st.plotly_chart(fig)
 
@@ -206,7 +207,8 @@ def plot_user_activity_4_weeks(user_id, activity_all_users_df, view_by):
                       plot_bgcolor="rgba(0,0,0,0)",
                       xaxis_title= xlabel,
                       yaxis_title= "Activity minutes",
-                      font_color="Black")
+                      font_color="Black",
+                      height = 450)
     
     st.plotly_chart(fig)
 

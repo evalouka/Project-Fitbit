@@ -23,8 +23,6 @@ from step import (
 )
 
 from intensity import (
-    plot_avg_intensity_per_hour,
-    plot_avg_intensity_by_dow,
     plot_steps_vs_intensity,
     plot_intensity_by_hour_for_id,
     plot_intensity_by_dow_for_id
@@ -239,7 +237,7 @@ activity_all_users_df = load_daily_activity_all_users()
 activity_induvidual_df = load_user_activity()
 calories_df = load_calories_data()
 
-general_tab, id_tab = st.tabs(["General", "Id"])
+general_tab, id_tab = st.tabs(["General data", "Individual data"])
 
 with general_tab:
     m1, m2, m3, m4 = st.columns(4)
@@ -377,30 +375,27 @@ with id_tab:
             row1_col1, row1_col2 = st.columns(2)
             with row1_col1:
                 individual_sleep_activity_corr(Id, activity_induvidual_df, sleep_df)
+                st.markdown(f"""
+                                                                           <div style="background-color: rgba(109, 98, 196, 0.2); padding: 1rem; border-radius: 0.5rem;">
+                                                                           <b style="color: #A960DA;">{label}</b><br><br>{advice}
+                                                                           <p style="text-align: right; margin: 0.5rem 0 0 0;"><small style="color: gray;">*Only based on dates with both activity and sleep data</small></p>
+                                                                           </div>""", unsafe_allow_html=True)
             with row1_col2:
-                plot_sleep_sedentary_correlation(Id, daily_activity_df, daily_sleep_df)
+                plot_sleep_vs_heartrate(Id, sleep_df, heart_rate_df)
 
-            view_col_1, view_col_2 =st.columns(2)
+            view_col_1, view_col_2 = st.columns(2)
             with view_col_2:
                 view_by = st.radio("View by", ["Day", "Week"], horizontal=True, key="avg_sleep")
             
             row2_col1, row2_col2 = st.columns(2)
             with row2_col1:
-                st.markdown(f"""
-                                                           <div style="background-color: rgba(109, 98, 196, 0.2); padding: 1rem; border-radius: 0.5rem;">
-                                                           <b style="color: #A960DA;">{label}</b><br><br>{advice}
-                                                           <p style="text-align: right; margin: 0.5rem 0 0 0;"><small style="color: gray;">*Only based on dates with both activity and sleep data</small></p>
-                                                           </div>""", unsafe_allow_html=True)
+                plot_sleep_sedentary_correlation(Id, daily_activity_df, daily_sleep_df)
             with row2_col2:
-                plot_sleep_vs_heartrate(Id, sleep_df, heart_rate_df)
-
-
-            row3_col1, row3_col2 = st.columns(2)
-            with row3_col1:
                 get_average_sleep(Id, sleep_df, view_by)
 
+            row3_col1, row3_col2 = st.columns(2)
 
-            with row3_col2:
+            with row3_col1:
                 plot_sleep_by_block_per_id(minutes_sleep_df, Id)
 
 

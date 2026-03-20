@@ -96,7 +96,6 @@ def plot_heart_rate_vs_activity_with_intensity(hr_data, activity_data, intensity
 
     hourly_activity_df["ActivityHour"] = hourly_activity_df["ActivityHour"].dt.floor("H")
 
-
     # Filter intensity data for given user_id
     intensity_df = intensity_data[intensity_data["Id"] == user_id].copy()
     if intensity_df.empty:

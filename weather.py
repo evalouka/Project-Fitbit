@@ -13,7 +13,6 @@ import numpy as np
 import statsmodels.api as sm
 import streamlit as st
 import plotly.express as px
-from anaconda_project.internal.cli.activate import activate
 
 
 def plot_weather_vs_activity_per_id(df1, df2, Id, choose):
@@ -77,13 +76,13 @@ def plot_weather_vs_activity_per_id(df1, df2, Id, choose):
                     x=x,
                     y="TotalSteps",
                     opacity=0.2,
-                    color_discrete_sequence=[px.colors.sequential.Blues[2]],
+                    color_discrete_sequence=[px.colors.sequential.Blues[8]],
                     title=title)
 
     fig.add_scatter(x=x_line,
                    y=y_line,
                    mode="lines",
-                   line=dict(color=px.colors.sequential.Blues[7]),
+                   line=dict(color=px.colors.sequential.Blues[6]),
                    name="Regression")
 
     fig.update_layout(height=500,
@@ -154,13 +153,13 @@ def plot_weather_vs_activity(weather_data, activity_data, choose):
     fig.add_scatter(x = means[x],
                    y = means["TotalSteps"],
                    mode="markers",
-                   marker= dict(color= px.colors.sequential.Blues[6]),
+                   marker= dict(color= px.colors.sequential.Blues[8]),
                    name = "Means")
 
     fig.add_scatter(x= x_line,
                    y = y_line,
                    mode ="lines",
-                   line= dict(color= px.colors.sequential.Blues[8]),
+                   line= dict(color= px.colors.sequential.Blues[6]),
                    name = "Regression")
 
     fig.update_layout(height = 450,

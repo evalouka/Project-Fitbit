@@ -1,3 +1,38 @@
+"""
+
+This script provides functions for activity analysis and visualization.
+
+The file contains the following functions:
+
+    get_gobal_activity
+        Returns a cleaned dataframe of the the total # of activity minutes each user had. 
+        Keeps track of total, very, fairly and light active minutes.
+
+    get_user_activity
+        Returns a cleaned dataframe of the # of active minutes a user has per day
+        Keeps track of total, very, fairly and light active minutes.
+
+    get_daily_activity_all_users
+        Returns a cleaned dataframe of the # of active minute each user has had for each day
+        Keeps track of total, very, fairly and light active minutes.
+
+    bar_average_activity_week
+        plots the average activity of a user per day of the week against the global average activity
+
+    plot_global_activity_4_weeks
+        Plots the total active minutes of all the users over the last 4 weeks
+        Keeps track and can be viewed by total, very, fairly and light active minutes.
+
+    plot_user_activity_4_weeks
+        Plots the activity over the last 4 weeks of the user
+        Keeps track and can be viewed by total, very, fairly and light active minutes.
+
+    get_5_best_days
+        returns the top 5 days where the user has had the most activity
+
+"""
+
+
 import pandas as pd
 import sqlite3
 import matplotlib.pyplot as plt
@@ -7,70 +42,23 @@ from datetime import datetime
 import matplotlib.dates as mdates
 import streamlit as st
 
-def get_global_activity(con):
-    #returns how many active minutes each user has
-    
-    act_query = """SELECT Id, 
-        COUNT(DISTINCT substr(ActivityDate, 1, 10)) as activity_day_count, 
-        SUM(VeryActiveMinutes + FairlyActiveMinutes + LightlyActiveMinutes) as total_active_minutes 
-        FROM daily_activity GROUP BY Id"""
-    df_activity = pd.read_sql_query(act_query, con)
+def get_global_activity(activity_all_users_df):
+    df = activity_all_users_df
+    return df.groupby('Id').agg(
+        activity_day_count=('ActivityDate', 'nunique'),
+        total_active_minutes=('daily_active_minutes', 'sum')
+    ).reset_index()
 
-    if not df_activity.empty:
-        df_activity['Id'] = pd.to_numeric(df_activity['Id'], errors= 'coerce')
-        df_activity['Id'] = df_activity['Id'].astype('Int64').astype(str)
-    #con.close()
+def get_user_activity(user_id, activity_induvidual_df):
+    df = activity_induvidual_df
+    return df[df['Id'] == str(user_id)].copy()
 
-    return df_activity
+def get_daily_activity_all_users(activity_all_users_df):
+    return activity_all_users_df
 
-def get_user_activity(user_id, con):
+def bar_average_activity_week(Id, activity_all_users_df):
 
-    query = "SELECT Id, ActivityDate, SUM(VeryActiveMinutes + FairlyActiveMinutes + LightlyActiveMinutes) as active_minutes FROM daily_activity WHERE Id = ? GROUP BY ActivityDate"
-    df_activity = pd.read_sql_query(query, con, params=(user_id,))
-
-    if not df_activity.empty:
-        df_activity['Id'] = pd.to_numeric(df_activity['Id'], errors= 'coerce')
-        df_activity['Id'] = df_activity['Id'].astype('Int64').astype(str)
-
-    #con.close()
-    return df_activity
-
-def get_daily_activity_all_users(con):
-    #returns the daily active minutes for each user at each day
-    query = "SELECT Id, ActivityDate, VeryActiveMinutes, FairlyActiveMinutes, LightlyActiveMinutes, (VeryActiveMinutes + FairlyActiveMinutes + LightlyActiveMinutes) as daily_active_minutes FROM daily_activity"
-    df = pd.read_sql_query(query, con)
-    con.close()
-
-    df['Id'] = pd.to_numeric(df['Id'], errors='coerce')
-    df['Id'] = df['Id'].astype('Int64').astype(str)
-    df['ActivityDate'] = pd.to_datetime(df['ActivityDate'])
-    return df
-
-def classify_user(user_id, con):
-
-    cursor = con.cursor()
-
-    query = "SELECT COUNT(*) FROM daily_activity WHERE Id = ?"
-    cursor.execute(query, (user_id,))
-    
-    activity_count = cursor.fetchone()[0]
-    con.close()
-
-    if activity_count == 0:
-        return f"User {user_id} has no recorded activity."
-    elif activity_count <= 10:
-        category = "Light user"
-    elif 11 <= activity_count <= 15:
-        category = "Moderate user"
-    else:
-        category = "Heavy user"
-
-    print(f"You have {activity_count} activity entries over the last 2 months, therefore you are a {category}")
-    return activity_count
-
-def bar_average_activity_week(Id, con):
-
-    df_all = get_daily_activity_all_users(con)
+    df_all = get_daily_activity_all_users(activity_all_users_df)
     df_all['ActivityDate'] = pd.to_datetime(df_all['ActivityDate'])
     df_all['DayOfWeek'] = df_all['ActivityDate'].dt.day_name()
 
@@ -82,15 +70,16 @@ def bar_average_activity_week(Id, con):
     user_avg = df_ind.groupby('DayOfWeek')['daily_active_minutes'].mean().reindex(day_order).reset_index()
 
     fig = px.bar(user_avg, x='DayOfWeek', y='daily_active_minutes', 
-                 title=f'Your Avg Activity vs Global Average (User: {Id})',
+                 title=f'Your Avg Activity vs Global Average for User: {Id}',
                  labels={'daily_active_minutes': 'Avg Active Minutes'}
                  )
-    fig.update_traces(marker_color="#2c7da0", name="User Average Activity", showlegend=True)
+    
+    fig.update_traces(marker_color="#2c7da0", name="Average User Activity", showlegend=True, marker_line_color="white", marker_line_width=1)
 
     line = px.line(global_avg, x='DayOfWeek', y='daily_active_minutes')
     line_trace = line.data[0]
-    line_trace.update(name='Global Average',
-                  line=dict(color="#3C27C6", width=4))
+    line_trace.update(name='Global Average Activity',
+                  line=dict(color="#3C27C6", width=4), showlegend=True)
 
     fig.add_trace(line_trace)
 
@@ -101,12 +90,11 @@ def bar_average_activity_week(Id, con):
                       yaxis_title="Number of Active Minutes",
                       font_color="black")
 
-    fig.show()
+    st.plotly_chart(fig)
 
-
-def plot_global_activity_4_weeks(con, view_by):
+def plot_global_activity_4_weeks(activity_all_users_df, view_by):
         
-    df = get_daily_activity_all_users(con)
+    df = get_daily_activity_all_users(activity_all_users_df)
     df['ActivityDate'] = pd.to_datetime(df['ActivityDate'])
     
     last_day = df['ActivityDate'].max()
@@ -122,27 +110,27 @@ def plot_global_activity_4_weeks(con, view_by):
 
     if view_by == "Total activity":
         activity = 'daily_active_minutes'
-        daily_summary = df_recent.groupby('ActivityDate')['daily_active_minutes'].mean().reset_index()
+        daily_summary = df_recent.groupby('ActivityDate')['daily_active_minutes'].sum().reset_index()
         title = f"Total activity minutes over the last 4 weeks"
 
-    elif view_by == "Very active":
+    elif view_by == "Very active activity":
         activity = 'VeryActiveMinutes'
-        daily_summary = df_recent.groupby('ActivityDate')['VeryActiveMinutes'].mean().reset_index()
+        daily_summary = df_recent.groupby('ActivityDate')['VeryActiveMinutes'].sum().reset_index()
         title = f"Very active activity Minutes over the last 4 weeks"
         
-    elif view_by == "Fairly active":
+    elif view_by == "Fairly active activity":
         activity = 'FairlyActiveMinutes'
-        daily_summary = df_recent.groupby('ActivityDate')['FairlyActiveMinutes'].mean().reset_index()
+        daily_summary = df_recent.groupby('ActivityDate')['FairlyActiveMinutes'].sum().reset_index()
         title = f"Fairly active activity Minutes over the last 4 weeks"
 
     elif view_by == "Light Activity":
         activity = 'LightlyActiveMinutes'
-        daily_summary = df_recent.groupby('ActivityDate')['LightlyActiveMinutes'].mean().reset_index()
+        daily_summary = df_recent.groupby('ActivityDate')['LightlyActiveMinutes'].sum().reset_index()
         title = f"Light active activity Minutes over the last 4 weeks"
 
     fig = px.line(daily_summary, x='ActivityDate', y=activity, title=title, markers=True)
     
-    fig.update_traces(line=dict(color="#62c4bc", width=2))
+    fig.update_traces(line=dict(color="#3557d4", width=2), fill='tozeroy', fillcolor="rgba(53, 87, 212, 0.6)")
 
     fig.update_layout(paper_bgcolor="rgba(0,0,0,0)",
                       plot_bgcolor="rgba(0,0,0,0)",
@@ -150,10 +138,10 @@ def plot_global_activity_4_weeks(con, view_by):
                       yaxis_title= "Activity minutes",
                       font_color="Black")
     
-    fig.show()
+    st.plotly_chart(fig)
 
-def plot_user_activity_4_weeks(user_id, con, view_by):
-    df = get_daily_activity_all_users(con)
+def plot_user_activity_4_weeks(user_id, activity_all_users_df, view_by):
+    df = get_daily_activity_all_users(activity_all_users_df)
 
     df['Id'] = df['Id'].astype(str).str.strip()
     get_id = str(user_id).strip()
@@ -182,23 +170,23 @@ def plot_user_activity_4_weeks(user_id, con, view_by):
 
     if view_by == "Total activity":
         activity = 'daily_active_minutes'
-        daily_summary = complete_df.groupby('ActivityDate')['daily_active_minutes'].mean().reset_index()
+        daily_summary = complete_df.groupby('ActivityDate')['daily_active_minutes'].sum().reset_index()
         title = f"Total activity minutes over the last 4 weeks of user {user_id}"
 
-    elif view_by == "Very active":
+    elif view_by == "Very active activity":
         activity = 'VeryActiveMinutes'
-        daily_summary = complete_df.groupby('ActivityDate')['VeryActiveMinutes'].mean().reset_index()
-        title = f"Very active activity Minutes over the last 4 weeks of user {user_id}"
+        daily_summary = complete_df.groupby('ActivityDate')['VeryActiveMinutes'].sum().reset_index()
+        title = f"Very Active Minutes over the last 4 weeks of user {user_id}"
         
-    elif view_by == "Fairly active":
+    elif view_by == "Fairly active activity":
         activity = 'FairlyActiveMinutes'
-        daily_summary = complete_df.groupby('ActivityDate')['FairlyActiveMinutes'].mean().reset_index()
-        title = f"Fairly active activity Minutes over the last 4 weeks of user {user_id}"
+        daily_summary = complete_df.groupby('ActivityDate')['FairlyActiveMinutes'].sum().reset_index()
+        title = f"Fairly Active Minutes over the last 4 weeks of user {user_id}"
 
     elif view_by == "Light Activity":
         activity = 'LightlyActiveMinutes'
-        daily_summary = complete_df.groupby('ActivityDate')['LightlyActiveMinutes'].mean().reset_index()
-        title = f"Light active activity Minutes over the last 4 weeks of user {user_id}"
+        daily_summary = complete_df.groupby('ActivityDate')['LightlyActiveMinutes'].sum().reset_index()
+        title = f"Light Active Minutes over the last 4 weeks of user {user_id}"
     
     # DEBUG: cant find data
     else:
@@ -212,7 +200,7 @@ def plot_user_activity_4_weeks(user_id, con, view_by):
 
     fig = px.line(daily_summary, x='ActivityDate', y=activity, title=title, markers=True)
 
-    fig.update_traces(line=dict(color="#62c4bc", width=2))
+    fig.update_traces(line=dict(color="#3557d4", width=2), fill='tozeroy', fillcolor="rgba(53, 87, 212, 0.6)")
 
     fig.update_layout(paper_bgcolor="rgba(0,0,0,0)",
                       plot_bgcolor="rgba(0,0,0,0)",
@@ -220,23 +208,19 @@ def plot_user_activity_4_weeks(user_id, con, view_by):
                       yaxis_title= "Activity minutes",
                       font_color="Black")
     
-    fig.show()
+    st.plotly_chart(fig)
 
-def get_5_best_days(user_id, con):
+def get_5_best_days(user_id, activity_induvidual_df):
 
     st.subheader("Top 5 best days")
 
-    df_active = get_user_activity(user_id, con)
+    df_active = get_user_activity(user_id, activity_induvidual_df)
     df_best_days = df_active.sort_values(by='active_minutes', ascending=False)
-    df_top_5 = df_best_days.head(5)
+    df_top_5 = df_best_days[['ActivityDate', 'active_minutes']].head(5).reset_index(drop=True)
+    df_top_5.index = range(1, 6)
+    df_top_5.columns = ['Date of activity', 'Active minutes']
 
-    final_df = df_top_5.style.background_gradient(subset=['active_minutes'], cmap='GnBu') \
-                           .format({'active_minutes': '{:.0f} min'})
+    final_df = df_top_5.style.background_gradient(cmap='Blues') \
+                           .format({'Active minutes': '{:.0f} min'})
 
     st.table(final_df)
-
-view_by = "Total activity"
-Id = 4319703577
-#con = sqlite3.connect(r"C:\Users\jonge\PycharmProjects\Data Engineering\Project-Fitbit\fitbit_database.db")
-#plot_user_activity_4_weeks(Id, con, view_by)
-#bar_average_activity_week(Id, con)

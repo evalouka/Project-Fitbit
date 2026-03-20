@@ -225,10 +225,7 @@ def mean_HR_per_group_compared_to_id(df, user_id, selected):
     # Get report to know the class of each Id
     report = classify_users()
     report["Id"] = report["Id"].astype(str)
-
     heart_rate_df = df.copy()
-
-    # Extract the hour of the dates
     heart_rate_df["Hour"] = heart_rate_df["Time"].dt.hour
 
     # Calculate mean heart rate per user for each hour of the day
@@ -247,15 +244,12 @@ def mean_HR_per_group_compared_to_id(df, user_id, selected):
         return
     id_mean["Class"] = "Id"
 
-    # Create a dataframe containing only the selected groups
     selected_df = hourly_mean_HR[hourly_mean_HR["Class"].isin(selected)]
     selected_df = pd.concat([selected_df, id_mean])
 
-    # Create colorscheme
     colors = {"Light": px.colors.sequential.Blues[1], "Moderate": px.colors.sequential.Blues[3],
               "Heavy": px.colors.sequential.Blues[5], "Id": px.colors.sequential.Blues[7]}
 
-    # Line plot of heart rate means
     fig = px.line(selected_df,
                   height = 470,
                   x = "Hour",

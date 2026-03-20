@@ -13,38 +13,33 @@ import streamlit as st
 import plotly.express as px
 
 
-def plot_mean_heart_rate(df, Id, view_by):
+def plot_mean_heart_rate(df, user_id, view_by):
     """
        Plot mean heart rate per day or hour for selected user.
 
        Args:
            df: heart rate dataframe containing "Id", "Time", and "Value"
-           Id: The Id of the user to analyze
+           user_id: The Id of the user to analyze
            view_by: Determines whether to view by hour or day
 
-       Returns:
-            plotly figure object
        """
 
     # Filter the data for given Id
-    heart_rate_df = df[df["Id"] == Id].copy()
+    heart_rate_df = df[df["Id"] == user_id].copy()
 
     if heart_rate_df.empty:
-        st.write("No heart rate data available for this user")
+        st.info("No heart rate data available for this user")
         return
 
     # Convert time to either hour or day, depending on the view by
     if view_by == "Hour":
         heart_rate_df["Time"] = heart_rate_df["Time"].dt.hour
         xlabel = "Hour of day"
-        title = f"Mean heart rate per hour for user {Id}"
+        title = f"Average heart rate per hour for user {user_id}"
     else:
         heart_rate_df["Time"] = heart_rate_df["Time"].dt.date
         xlabel = "Date"
-        title = f"Mean heart rate per day for user {Id}"
-
-    # Convert value column to numeric
-    # heart_rate_df["Value"] = pd.to_numeric(heart_rate_df["Value"])
+        title = f"Average heart rate per day for user {user_id}"
 
     # Compute mean heart rate per hour or day
     means_heart_rate = heart_rate_df.groupby("Time")["Value"].mean().reset_index()
@@ -62,7 +57,7 @@ def plot_mean_heart_rate(df, Id, view_by):
                       paper_bgcolor="rgba(0,0,0,0)",
                       plot_bgcolor="rgba(0,0,0,0)",
                       xaxis_title=xlabel,
-                      yaxis_title="Mean heart rate",
+                      yaxis_title="Mean heart rate (bpm)",
                       font_color="white"
                       )
 
@@ -70,47 +65,46 @@ def plot_mean_heart_rate(df, Id, view_by):
 
 
 
-def plot_heart_rate_vs_activity_with_intensity(df1, df2, df3, Id):
+def plot_heart_rate_vs_activity_with_intensity(hr_data, activity_data, intensity_data, user_id):
     """
          Plot mean heart rate per hour vs hourly activity, colored by the hourly average intensity.
 
          Args:
-             df1: heart rate dataframe containing "Id", "Time", and "Value"
-             df2: activity dataframe containing "Id", "ActivityHour", and StepTotal
-             df3: intensity dataframe containing "Id", "ActivityHour", and "AverageIntensity"
-             Id: The Id of the user to analyze
+             hr_data: heart rate dataframe containing "Id", "Time", and "Value"
+             activity_data: activity dataframe containing "Id", "ActivityHour", and StepTotal
+             intensity_data: intensity dataframe containing "Id", "ActivityHour", and "AverageIntensity"
+             user_id: The Id of the user to analyze
 
-         Returns:
-              plotly figure object
          """
 
-
-    # Filter heart rate data for given Id
-    heart_rate_df = df1[df1["Id"] == Id].copy()
+    # Filter heart rate data for given user_id
+    heart_rate_df = hr_data[hr_data["Id"] == user_id].copy()
 
     if heart_rate_df.empty:
-        st.write("No heart rate data available for this user")
+        st.info("No heart rate data available for this user")
         return
 
     # Compute mean heart rate for each hour of each date
     heart_rate_df["Hour"] = heart_rate_df["Time"].dt.floor("H")
     means_heart_rate = heart_rate_df.groupby("Hour")["Value"].mean().reset_index()
 
-    # Filter activity data for given Id
-    hourly_activity_df = df2[df2["Id"] == Id].copy()
+    # Filter activity data for given user_id
+    hourly_activity_df = activity_data[activity_data["Id"] == user_id].copy()
+    if hourly_activity_df.empty:
+        st.info("No activity data available for this user")
+        return
+
     hourly_activity_df["ActivityHour"] = hourly_activity_df["ActivityHour"].dt.floor("H")
 
-    if hourly_activity_df.empty:
-        st.write("No activity data available for this user")
+
+    # Filter intensity data for given user_id
+    intensity_df = intensity_data[intensity_data["Id"] == user_id].copy()
+    if intensity_df.empty:
+        st.info("No intensity data available for this user")
         return
 
-    # Filter intensity data for given Id
-    intensity_df = df3[df3["Id"] == Id].copy()
     intensity_df["ActivityHour"] = intensity_df["ActivityHour"].dt.floor("H")
 
-    if intensity_df.empty:
-        st.write("No intensity data available for this user")
-        return
 
     # Merge mean heart rate into activity by Hour
     hourly_activity_df = hourly_activity_df.merge(means_heart_rate, left_on="ActivityHour", right_on="Hour")
@@ -118,20 +112,24 @@ def plot_heart_rate_vs_activity_with_intensity(df1, df2, df3, Id):
     # Then merge also Intensity on Id and Hour
     hourly_activity_df = hourly_activity_df.merge(intensity_df, on = ["Id", "ActivityHour"], how = "left")
 
+    if hourly_activity_df.empty:
+        st.info("No data available for this user")
+        return
+
     # Scatterplot of Total Steps vs Heart Rate, colored by the Average Intensity
     fig = px.scatter(hourly_activity_df,
                      x= "StepTotal",
                      y= "Value",
                      color ="AverageIntensity",
-                     title = f"Total steps vs mean heart rate per hour colored by the average intensity <br> for user {Id}",
+                     title = f"Total steps vs mean heart rate per hour colored by the average intensity <br> for user {user_id}",
                      color_continuous_scale= "Blues",
                      )
 
     fig.update_layout(height = 470,
                       paper_bgcolor="rgba(0,0,0,0)",
                       plot_bgcolor="rgba(0,0,0,0)",
-                      xaxis_title="Total Steps",
-                      yaxis_title="Mean heart rate",
+                      xaxis_title="Total steps per hour",
+                      yaxis_title="Mean heart rate (bpm)",
                       font_color="white")
 
     fig.update_coloraxes(colorbar_title = "Average Intensity")
@@ -140,36 +138,34 @@ def plot_heart_rate_vs_activity_with_intensity(df1, df2, df3, Id):
 
 
 
-def plot_hr_zones(df, Id, view_by):
+def plot_hr_zones(df, user_id, view_by):
     """
           Plot proportion of observations spent in different heart rate zones per day or
           average proportion per hour for a selected user.
 
           Args:
               df: heart rate dataframe containing "Id", "Time", and "Value"
-              Id: The Id of the user to analyze
+              user_id: The Id of the user to analyze
               view_by: Determines whether to view by hour or day
 
-          Returns:
-               plotly figure object
           """
 
     # Filter heart rate data for given Id
-    heart_rate_df = df[df["Id"] == Id].copy()
+    heart_rate_df = df[df["Id"] == user_id].copy()
 
     if heart_rate_df.empty:
-        st.write("No heart rate data available for this user")
+        st.info("No heart rate data available for this user")
         return
 
     # Convert time to either hour or day, depending on the view by
     if view_by == "Hour":
         heart_rate_df["Time"] = heart_rate_df["Time"].dt.hour
         xlabel = "Hour of day"
-        title = f"Average heart rate zones distribution per hour for user {Id}"
+        title = f"Heart rate zones distribution per hour for user {user_id}"
     else:
         heart_rate_df["Time"] = heart_rate_df["Time"].dt.date
         xlabel = "Date"
-        title = f"Heart rate zones distribution per day for user {Id}"
+        title = f"Heart rate zones distribution per day for user {user_id}"
 
     # Compute max heart rate
     max_hr = heart_rate_df["Value"].max()
@@ -183,7 +179,6 @@ def plot_hr_zones(df, Id, view_by):
 
     # Count observations in heart rate zone
     zones_df = heart_rate_df.groupby(["Time", "Zone"]).size().unstack()
-    zones_df.columns = zones_df.columns.astype(str)
     zones_df = zones_df.reindex(columns = labels, fill_value=0)
 
     # Convert to percentages
@@ -205,27 +200,26 @@ def plot_hr_zones(df, Id, view_by):
                       paper_bgcolor="rgba(0,0,0,0)",
                       plot_bgcolor="rgba(0,0,0,0)",
                       xaxis_title=xlabel,
-                      yaxis_title="Percentage",
+                      yaxis_title="Proportion",
                       font_color="white",
                       legend=dict(yanchor="top", y=1, xanchor="left", x=1.02),
                       )
 
     st.plotly_chart(fig)
+    st.caption("Heart rate zones are based on the user's observed maximum heart rate")
 
 
 
-def mean_HR_per_group_compared_to_id(df, Id, selected):
+def mean_HR_per_group_compared_to_id(df, user_id, selected):
     """
            Plots the mean heart rate per hour of a selected user and compare to the mean heart rate per hour
            of selected user classes.
 
            Args:
-               df: heart rate dataframe containing "Id", "Time", and "Value"
-               Id: The Id of the user to analyze
+               df: Heart rate dataframe containing "Id", "Time", and "Value"
+               user_id: The Id of the user to analyze
                selected: Determines which classes to compare to
 
-           Returns:
-                plotly figure object
            """
 
     # Get report to know the class of each Id
@@ -238,18 +232,18 @@ def mean_HR_per_group_compared_to_id(df, Id, selected):
     heart_rate_df["Hour"] = heart_rate_df["Time"].dt.hour
 
     # Calculate mean heart rate per user for each hour of the day
-    hourly_mean_HR_per_user = heart_rate_df.groupby(["Id", "Hour"]).mean().reset_index()
+    hourly_mean_HR_per_user = heart_rate_df.groupby(["Id", "Hour"])["Value"].mean().reset_index()
 
     # Merge heart rate dataframe with report on Id
     hourly_mean_HR_per_user = hourly_mean_HR_per_user.merge(report, on = "Id", how= "inner")
 
     # Calculate the hourly mean for each class
-    hourly_mean_HR = hourly_mean_HR_per_user.groupby(["Class", "Hour"]).mean().reset_index()
+    hourly_mean_HR = hourly_mean_HR_per_user.groupby(["Class", "Hour"])["Value"].mean().reset_index()
 
     # Compute hourly mean heart rate for given Id
-    id_mean = hourly_mean_HR_per_user[hourly_mean_HR_per_user["Id"] == str(Id)].copy()
+    id_mean = hourly_mean_HR_per_user[hourly_mean_HR_per_user["Id"] == user_id].copy()
     if id_mean.empty:
-        st.write("No heart rate data available for this user")
+        st.info("No heart rate data available for this user")
         return
     id_mean["Class"] = "Id"
 
@@ -268,18 +262,17 @@ def mean_HR_per_group_compared_to_id(df, Id, selected):
                   y = "Value",
                   color = "Class",
                   markers = True,
-                  title = f"Mean heart rate per hour compared to selected classes for user {Id}",
+                  title = f"Average heart rate per hour compared to selected classes for <br> user {user_id}",
                   color_discrete_map=colors
     )
 
     fig.update_layout(paper_bgcolor="rgba(0,0,0,0)",
                       plot_bgcolor="rgba(0,0,0,0)",
                       xaxis_title="Hour",
-                      yaxis_title="Mean heart rate",
+                      yaxis_title="Average heart rate (bpm)",
                       font_color="white",)
 
     st.plotly_chart(fig)
-
     # Compute the number of light, moderate, and heavy users for caption
     unique_id = hourly_mean_HR_per_user[["Id", "Class"]].drop_duplicates()
     heavy_count = (unique_id["Class"] == "Heavy").sum()
@@ -298,9 +291,6 @@ def HR_zones_per_group(df):
 
            Args:
                df: heart rate dataframe containing "Id", "Time", and "Value"
-
-           Returns:
-                plotly figure object
            """
 
     # Get report to know the class of each Id
@@ -323,8 +313,7 @@ def HR_zones_per_group(df):
     heart_rate_df["Zone"] = pd.cut(heart_rate_df["Value"] / heart_rate_df["Max HR"], bins=bins, labels=labels)
 
     # Calculate how many minutes are spent in each zone
-    zones_df = heart_rate_df.groupby(["Time", "Class", "Zone"]).size().unstack()
-    zones_df.columns = zones_df.columns.astype(str)
+    zones_df = heart_rate_df.groupby(["Id", "Class", "Zone"]).size().unstack()
     zones_df = zones_df.reindex(columns=labels, fill_value=0)
 
     # Convert to percentages
@@ -352,7 +341,7 @@ def HR_zones_per_group(df):
                       paper_bgcolor="rgba(0,0,0,0)",
                       plot_bgcolor="rgba(0,0,0,0)",
                       xaxis_title="Class",
-                      yaxis_title="Percentage",
+                      yaxis_title="Proportion",
                       font_color="white",
                       legend=dict(yanchor="top", y=1, xanchor="left", x=1.02),
 
@@ -368,6 +357,7 @@ def HR_zones_per_group(df):
     st.caption(
         f"Based on {heavy_count} heavy user(s), {moderate_count} moderate user(s), and {light_count} "
         f"light user(s)")
+    st.caption("Heart rate zones are based on the user's observed maximum heart rate")
 
 
 

@@ -1,129 +1,129 @@
-import sqlite3
 import pandas as pd
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go
+import plotly.express as px
+import streamlit as st
 
-#  Connect
-DB_PATH = "fitbit_database.db"
-conn = sqlite3.connect(DB_PATH)
 
-#  Load tables
+#grouping and averages
+def get_hourly_avg(intensity_df):
+    """Average intensity across all users by hour of day."""
+    return intensity_df.groupby("Hour")[["TotalIntensity", "AverageIntensity"]].mean().round(2)
 
-# Get list of tables in the database
-hourly_intensity = pd.read_sql("SELECT * FROM hourly_intensity", conn)
-tables = pd.read_sql(
-    "SELECT name FROM sqlite_master WHERE type='table';", conn
-)["name"].tolist()
 
-# Function to safely load tables
-def load_table(name):
-    if name in tables:
-        return pd.read_sql(f"SELECT * FROM {name}", conn)
-    else:
-        return None
+def get_dow_avg(intensity_df):
+    """Average intensity by day of week."""
+    dow_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    return intensity_df.groupby("Day of Week")["AverageIntensity"].mean().reindex(dow_order).round(2)
 
-# Load tables
-daily_activity = load_table("daily_activity")
-hourly_steps   = load_table("hourly_steps")
 
-# Clean & parse
-df = hourly_intensity.copy()
-df.columns = df.columns.str.strip()
-df["ActivityHour"] = pd.to_datetime(df["ActivityHour"], format="mixed")
-df["Date"]         = df["ActivityHour"].dt.date
-df["Hour"]         = df["ActivityHour"].dt.hour
-df["DayOfWeek"]    = df["ActivityHour"].dt.day_name()
-df["IsWeekend"]    = df["ActivityHour"].dt.dayofweek >= 5
-df["Id"]           = df["Id"].astype(str)
+def get_steps_intensity_merged(intensity_df, hourly_steps_df):
+    """Merge intensity with steps on Id + ActivityHour for scatter plot."""
+    return intensity_df.merge(hourly_steps_df, on=["Id", "ActivityHour"], how="inner")
 
-print("Shape:", df.shape)
-print("\nMissing values:\n", df.isnull().sum())
-print("\nBasic stats:\n", df[["TotalIntensity", "AverageIntensity"]].describe())
+#plot functions for all the users
+def plot_avg_intensity_per_hour(intensity_df):
+    """Line chart — average intensity for each hour of the day (all users)."""
+    hourly_avg = get_hourly_avg(intensity_df)
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=hourly_avg.index,
+        y=hourly_avg["AverageIntensity"],
+        mode="lines+markers",
+        marker=dict(color="dodgerblue"),
+        line=dict(color="dodgerblue"),
+        name="Avg Intensity"
+    ))
+    fig.update_layout(
+        title="Avg Intensity by Hour of Day",
+        xaxis_title="Hour",
+        yaxis_title="Average Intensity",
+        xaxis=dict(tickvals=list(range(0, 24)))
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
-#  Stats per individual
-def stats_per_individual(dataframe, user_id=None):
-    if user_id is not None:
-        dataframe = dataframe[dataframe["Id"] == str(user_id)]
-    return (dataframe.groupby("Id")[["TotalIntensity", "AverageIntensity"]]
-            .agg(["mean", "max", "sum"]).round(2))
 
-print("\nPer-individual summary:")
-print(stats_per_individual(df))
+def plot_avg_intensity_by_dow(intensity_df):
+    """Bar chart — average intensity by day of week (all users)."""
+    dow_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    dow_avg = intensity_df.groupby("Day of Week")["AverageIntensity"].mean().reindex(dow_order).round(2)
 
-#  Stats per date range
-def stats_per_date_range(dataframe, start_date=None, end_date=None):
-    d = dataframe.copy()
-    if start_date: d = d[d["Date"] >= pd.to_datetime(start_date).date()]
-    if end_date:   d = d[d["Date"] <= pd.to_datetime(end_date).date()]
-    return d.groupby("Date")[["TotalIntensity", "AverageIntensity"]].mean().round(2)
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        x=dow_avg.index.tolist(),
+        y=dow_avg.values,
+        marker_color="royalblue"
+    ))
+    fig.update_layout(
+        title="Average intensity by Day of Week (All Users)",
+        xaxis_title="Day of Week",
+        yaxis_title="Average Intensity"
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
-# Stats per hour
-def stats_per_hour(dataframe, user_id=None):
-    d = dataframe if user_id is None else dataframe[dataframe["Id"] == str(user_id)]
-    return d.groupby("Hour")[["TotalIntensity", "AverageIntensity"]].mean().round(2)
+#plot functions per user
 
-#  Plots
-plt.style.use("ggplot")   # <-- replaces sns.set_theme(), no install needed
-fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-fig.suptitle("Fitbit – Hourly Intensity Analysis", fontsize=15, fontweight="bold")
+def plot_steps_vs_intensity(intensity_df, hourly_steps_df, user_id):
+    """Scatter plot — steps vs average intensity (all users)."""
+    merged = intensity_df.merge(hourly_steps_df, on=["Id", "ActivityHour"], how="inner")
+    merged  = merged[merged["Id"] == user_id]
+    if merged.empty:
+        st.info("No data available for this user")
 
-hourly_avg = stats_per_hour(df)
-axes[0, 0].plot(hourly_avg.index, hourly_avg["AverageIntensity"], marker="o", color="steelblue")
-axes[0, 0].set_title("Avg Intensity by Hour of Day")
-axes[0, 0].set_xlabel("Hour"); axes[0, 0].set_ylabel("Average Intensity")
-axes[0, 0].set_xticks(range(0, 24))
+    fig = px.scatter(
+        merged,
+        x="StepTotal",
+        y="AverageIntensity",
+        opacity=0.4,
+        color_discrete_sequence=["royalblue"],
+        title=f"Steps vs average intensity for user {user_id}",
+        labels={"StepTotal": "Steps", "AverageIntensity": "Avg Intensity"}
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
-wk_avg = df.groupby("IsWeekend")["AverageIntensity"].mean()
-axes[0, 1].bar(["Weekday", "Weekend"], wk_avg.values, color=["steelblue", "tomato"])
-axes[0, 1].set_title("Avg Intensity: Weekday vs Weekend")
-axes[0, 1].set_ylabel("Average Intensity")
 
-dow_order = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
-dow_avg = df.groupby("DayOfWeek")["AverageIntensity"].mean().reindex(dow_order)
-axes[1, 0].bar(dow_avg.index, dow_avg.values, color="mediumseagreen")
-axes[1, 0].set_title("Avg Intensity by Day of Week")
-axes[1, 0].set_xticks(range(len(dow_order)))
-axes[1, 0].set_xticklabels(dow_order, rotation=30, ha="right")
-axes[1, 0].set_ylabel("Average Intensity")
+def plot_intensity_by_hour_for_id(intensity_df, user_id):
+    """Line chart — average intensity by hour of day for a single user."""
+    df_id = intensity_df[intensity_df["Id"] == user_id]
+    if df_id.empty:
+        st.info("No data available for this user")
+        return
+    hourly_avg = df_id.groupby("Hour")["AverageIntensity"].mean().round(2)
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=hourly_avg.index,
+        y=hourly_avg.values,
+        mode="lines+markers",
+        marker=dict(color="royalblue"),
+        line=dict(color="royalblue"),
+        name=f"User {user_id}"
+    ))
+    fig.update_layout(
+        title=f"Average intensity by hour — User {user_id}",
+        xaxis_title="Hour",
+        yaxis_title="Average Intensity",
+        xaxis=dict(tickvals=list(range(0, 24)))
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
-top_users = df["Id"].value_counts().head(8).index
-df_top = df[df["Id"].isin(top_users)]
-df_top.boxplot(column="TotalIntensity", by="Id", ax=axes[1, 1], rot=30)
-axes[1, 1].set_title("TotalIntensity Distribution per User")
-axes[1, 1].set_xlabel("User Id"); axes[1, 1].set_ylabel("Total Intensity")
-plt.suptitle("")
 
-plt.tight_layout()
-plt.savefig("intensity_analysis.png", dpi=150)
-plt.show()
-print("Plot saved as intensity_analysis.png")
+def plot_intensity_by_dow_for_id(intensity_df, user_id):
+    """Bar chart — average intensity by day of week for a single user."""
+    df_id = intensity_df[intensity_df["Id"] == user_id]
+    if df_id.empty:
+        st.info("No data available for this user")
+        return
 
-#  Steps vs Intensity
-if hourly_steps is not None:
-    hourly_steps["ActivityHour"] = pd.to_datetime(hourly_steps["ActivityHour"], format="mixed")
-    hourly_steps["Id"] = hourly_steps["Id"].astype(str)
-    merged = df.merge(hourly_steps, on=["Id", "ActivityHour"], how="inner")
-    print("\nCorrelation – Intensity vs Steps:")
-    print(merged[["TotalIntensity", "AverageIntensity", "StepTotal"]].corr().round(3))
-
-    fig2, ax = plt.subplots(figsize=(7, 5))
-    ax.scatter(merged["StepTotal"], merged["TotalIntensity"], alpha=0.2, s=10, color="purple")
-    ax.set_xlabel("Step Total"); ax.set_ylabel("Total Intensity")
-    ax.set_title("Steps vs Total Intensity")
-    plt.tight_layout()
-    plt.savefig("steps_vs_intensity.png", dpi=150)
-    plt.show()
-
-#  Daily activity merge
-if daily_activity is not None:
-    daily_activity["ActivityDate"] = pd.to_datetime(daily_activity["ActivityDate"])
-    daily_activity["Id"] = daily_activity["Id"].astype(str)
-
-    daily_intensity = (df.groupby(["Id", "Date"])["TotalIntensity"]
-                       .sum().reset_index()
-                       .rename(columns={"Date": "ActivityDate", "TotalIntensity": "DailyTotalIntensity"}))
-    daily_intensity["ActivityDate"] = pd.to_datetime(daily_intensity["ActivityDate"])
-
-    merged_daily = daily_activity.merge(daily_intensity, on=["Id", "ActivityDate"], how="inner")
-    if "TotalMinutesAsleep" in merged_daily.columns:
-        corr = merged_daily[["DailyTotalIntensity", "TotalMinutesAsleep"]].corr()
-        print("\nCorrelation – Daily Intensity vs Sleep:\n", corr.round(3))
+    dow_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    dow_avg = df_id.groupby("Day of Week")["AverageIntensity"].mean().reindex(dow_order).round(2)
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        x=dow_avg.index.tolist(),
+        y=dow_avg.values,
+        marker_color="royalblue"
+    ))
+    fig.update_layout(
+        title=f"Average intensity by day of week — User {user_id}",
+        xaxis_title="Day of Week",
+        yaxis_title="Average Intensity"
+    )
+    st.plotly_chart(fig, use_container_width=True)

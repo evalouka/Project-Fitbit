@@ -1,5 +1,6 @@
 import streamlit as st
 import os
+from scipy.constants import minute
 from heart_rate import plot_mean_heart_rate, HR_zones_per_group, plot_heart_rate_vs_activity_with_intensity, \
     mean_HR_per_group_compared_to_id
 from user_classification import classify_users
@@ -10,14 +11,22 @@ from weather import plot_weather_vs_activity, plot_weather_vs_activity_per_id
 from calories_regression import plot_regression_calories
 from minutes_distribution import distribution_activity_minutes_for_id
 # from activity_logs import plot_global_activity_4_weeks, plot_user_activity_4_weeks, get_5_best_days, plot_user_activity_4_weeks, get_5_best_users
-from sleep_activity import individual_sleep_activity_corr
-from calories import plot_user_vs_global_calories
+#from sleep_activity import individual_sleep_activity_corr
+#from calories import plot_user_vs_global_calories
 from step import (
     plot_steps_by_block_general,
     plot_steps_by_block_per_id,
     plot_sleep_sedentary_correlation,
     plot_sleep_by_block_per_id,
     plot_calories_by_block_per_id
+)
+
+from intensity import (
+    plot_avg_intensity_per_hour,
+    plot_avg_intensity_by_dow,
+    plot_steps_vs_intensity,
+    plot_intensity_by_hour_for_id,
+    plot_intensity_by_dow_for_id
 )
 
 st.set_page_config(
@@ -50,7 +59,7 @@ def load_unique_id():
 
 @st.cache_data
 def load_daily_activity_data():
-    query_daily_activity = f"SELECT Id, ActivityDate, TotalSteps, Calories FROM daily_activity"
+    query_daily_activity = f"SELECT Id, ActivityDate, TotalSteps, Calories, SedentaryMinutes FROM daily_activity"
     cursor = connection.cursor()
     cursor.execute(query_daily_activity)
     rows = cursor.fetchall()
@@ -62,6 +71,8 @@ def load_daily_activity_data():
 
 @st.cache_data
 def load_hourly_activity():
+    bins = [0, 4, 8, 12, 16, 20, 24]
+    labels = ["0-4", "4-8", "8-12", "12-16", "16-20", "20-24"]
     query_activity = f"SELECT Id, ActivityHour, StepTotal FROM hourly_steps"
     cursor_activity = connection.cursor()
     cursor_activity.execute(query_activity)
@@ -69,6 +80,9 @@ def load_hourly_activity():
     hourly_activity_df = pd.DataFrame(rows_activity, columns=[x[0] for x in cursor_activity.description]).copy()
     hourly_activity_df["Id"] = hourly_activity_df["Id"].astype(str)
     hourly_activity_df["ActivityHour"] = pd.to_datetime(hourly_activity_df["ActivityHour"])
+    hourly_activity_df["Date"] = hourly_activity_df["ActivityHour"].dt.date
+    hourly_activity_df["Hour"] = hourly_activity_df["ActivityHour"].dt.hour
+    hourly_activity_df["Block"] = pd.cut(hourly_activity_df["Hour"], bins=bins, labels=labels, right=False)
     return hourly_activity_df
 
 
@@ -103,13 +117,87 @@ def load_activity_minutes_data():
     activity_minutes_df["Id"] = activity_minutes_df["Id"].astype(str)
     return activity_minutes_df
 
+@st.cache_data
+def get_calories_metrics(daily_activity_df, user_id):
+    """Return per-user and global calorie stats from daily_activity."""
+    id_df      = daily_activity_df[daily_activity_df["Id"] == user_id]["Calories"]
+    global_df  = daily_activity_df["Calories"]
+    avg_cal    = id_df.mean()
+    max_cal    = id_df.max()
+    global_avg = global_df.mean()
+    vs_avg_pct = (avg_cal - global_avg) / global_avg * 100 if global_avg else 0
+    return avg_cal, max_cal, global_avg, vs_avg_pct
+
+
+@st.cache_data
+def load_intensity_data():
+    query = "Select Id, ActivityHour, TotalIntensity, AverageIntensity FROM hourly_intensity"
+    cursor = connection.cursor()
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    df = pd.DataFrame(rows, columns=[x[0] for x in cursor.description]).copy()
+    df["Id"] = df["Id"].astype(str)
+    df["ActivityHour"] = pd.to_datetime(df["ActivityHour"])
+    df["date"] = df["ActivityHour"].dt.date
+    df["Hour"] = df["ActivityHour"].dt.hour
+    df["Day of Week"] = df["ActivityHour"].dt.day_name()
+    df["IsWeekend"] = df["ActivityHour"].dt.dayofweek >= 5
+    return df
+
+
+@st.cache_data
+def load_minute_sleep():
+    bins = [0, 4, 8, 12, 16, 20, 24]
+    labels = ["0-4", "4-8", "8-12", "12-16", "16-20", "20-24"]
+    df = pd.read_sql_query("SELECT Id, date, value FROM minute_sleep", connection)
+    df["date"] = pd.to_datetime(df["date"], format="%m/%d/%Y %I:%M:%S %p")
+    df["Hour"] = df["date"].dt.hour
+    df["Date"] = df["date"].dt.date
+    df["Block"] = pd.cut(df["Hour"], bins=bins, labels=labels, right=False)
+    df["Id"] = df["Id"].astype(str)
+    return df
+
+
+@st.cache_data
+def load_hourly_calories():
+    bins = [0, 4, 8, 12, 16, 20, 24]
+    labels = ["0-4", "4-8", "8-12", "12-16", "16-20", "20-24"]
+    df = pd.read_sql_query("SELECT Id, ActivityHour, Calories FROM hourly_calories", connection)
+    df["ActivityHour"] = pd.to_datetime(df["ActivityHour"], format="%m/%d/%Y %I:%M:%S %p")
+    df["Hour"] = df["ActivityHour"].dt.hour
+    df["Date"] = df["ActivityHour"].dt.date
+    df["Block"] = pd.cut(df["Hour"], bins=bins, labels=labels, right=False)
+    df["Id"] = df["Id"].astype(str)
+    return df
+
+@st.cache_data
+def load_daily_sleep_data():
+    query = "SELECT Id, date, value FROM minute_sleep"
+    cursor = connection.cursor()
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    df = pd.DataFrame(rows, columns=[x[0] for x in cursor.description]).copy()
+    df["Id"] = df["Id"].astype(str)
+    df["date"] = pd.to_datetime(df["date"], format="%m/%d/%Y %I:%M:%S %p")
+    df["SleepDay"] = df["date"].dt.date
+    # count minutes where value == 1 (asleep) per user per day
+    daily_sleep = (df[df["value"] == 1]
+                   .groupby(["Id", "SleepDay"])
+                   .size()
+                   .reset_index(name="TotalMinutesAsleep"))
+    daily_sleep["SleepDay"] = pd.to_datetime(daily_sleep["SleepDay"])
+    return daily_sleep
 
 heart_rate_df = load_hr_data()
 daily_activity_df = load_daily_activity_data()
 hourly_activity_df = load_hourly_activity()
-intensity_df = load_hourly_intensity()
+hourly_intensity_df = load_hourly_intensity()
 weather_df = load_weather_data()
 activity_minutes_df = load_activity_minutes_data()
+intensity_df = load_intensity_data()
+minutes_sleep_df = load_minute_sleep()
+hourly_calories_df = load_hourly_calories()
+daily_sleep_df = load_daily_sleep_data()
 
 general_tab, id_tab = st.tabs(["General", "Id"])
 
@@ -129,8 +217,8 @@ with general_tab:
     m1.metric("Number of users", f"{len(load_unique_id())}")
     m2.metric("Average activity", f"{daily_activity_df['TotalSteps'].mean():.0f} steps")
     m3.metric("Date range",
-              f"{daily_activity_df.sort_values(by='ActivityDate')['ActivityDate'].iloc[0].strftime('%d/%m/%Y')}"
-              f" - {daily_activity_df.sort_values(by='ActivityDate')['ActivityDate'].iloc[-1].strftime('%d/%m/%Y')} ")
+              f"{daily_activity_df.sort_values(by='ActivityDate')['ActivityDate'].iloc[0].strftime('%m/%d/%Y')}"
+              f" - {daily_activity_df.sort_values(by='ActivityDate')['ActivityDate'].iloc[-1].strftime('%m/%d/%Y')} ")
     m4.metric("Average sleep", f"Aimee")
 
     row1_col1, row1_col2 = st.columns(2)
@@ -141,7 +229,7 @@ with general_tab:
 
     row2_col1, row2_col2 = st.columns(2)
     with row2_col1:
-        plot_steps_by_block_general()
+        plot_steps_by_block_general(hourly_activity_df)
     with row2_col2:
         st.write("Print 5 best users, or whatever you like (Eva)")
 
@@ -169,8 +257,8 @@ with id_tab:
             m1.metric("You are a", id_class + " user")
             m2.metric("Average activity", f"{id_daily_activity['TotalSteps'].mean():.0f} steps")
             m3.metric("Date range",
-                      f"{id_daily_activity.sort_values(by='ActivityDate')['ActivityDate'].iloc[0].strftime('%d/%m/%Y')}"
-                      f" - {id_daily_activity.sort_values(by='ActivityDate')['ActivityDate'].iloc[-1].strftime('%d/%m/%Y')} ")
+                      f"{id_daily_activity.sort_values(by='ActivityDate')['ActivityDate'].iloc[0].strftime('%m/%d/%Y')}"
+                      f" - {id_daily_activity.sort_values(by='ActivityDate')['ActivityDate'].iloc[-1].strftime('%m/%d/%Y')} ")
             m4.metric("Average sleep", f"Aimee")
 
             row1_col1, row1_col2 = st.columns(2)
@@ -182,7 +270,6 @@ with id_tab:
             row2_col1, row2_col2 = st.columns(2)
             with row2_col1:
                 view_by = st.radio("View by", ["Hour", "Day"], horizontal=True, key="hr_mean_general_tab", index=1)
-                st.write("Median heart rate by hour/day (Naomi)")
 
             row3_col1, row3_col2 = st.columns(2)
             with row3_col1:
@@ -208,7 +295,7 @@ with id_tab:
             with row1_col1:
                 st.write("plot_user_activity_4_weeks(Id, connection)")  # Aimee
             with row1_col2:
-                plot_steps_by_block_per_id(Id)
+                plot_steps_by_block_per_id(Id, hourly_activity_df)
 
             row2_col1, row2_col2 = st.columns(2)
             with row2_col1:
@@ -227,11 +314,11 @@ with id_tab:
             with row1_col1:
                 st.write("individual_sleep_activity_corr(Id, connection)")  # Aimee
             with row1_col2:
-                plot_sleep_sedentary_correlation(Id)
+                plot_sleep_sedentary_correlation(Id, daily_activity_df, daily_sleep_df)
 
             row2_col1, row2_col2 = st.columns(2)
             with row2_col1:
-                plot_sleep_by_block_per_id(Id)
+                plot_sleep_by_block_per_id(minutes_sleep_df, Id)
             with row2_col2:
                 st.write("Average sleep per day/week (Aimee)")  # Aimee
 
@@ -252,7 +339,7 @@ with id_tab:
             with row1_col1:
                 plot_mean_heart_rate(heart_rate_df, Id, view_by)
             with row1_col2:
-                plot_heart_rate_vs_activity_with_intensity(heart_rate_df, hourly_activity_df, intensity_df, Id)
+                plot_heart_rate_vs_activity_with_intensity(heart_rate_df, hourly_activity_df, hourly_intensity_df, Id)
 
             row2_col1, row2_col2 = st.columns(2)
             with row2_col1:
@@ -266,22 +353,29 @@ with id_tab:
             with row3_col2:
                 mean_HR_per_group_compared_to_id(heart_rate_df, Id, selected)
 
-            row4_col1, row4_col2 = st.columns(2)
-            with row4_col1:
-                st.write("Average hear rate of the day vs sleep of that day (Aimee)")
 
         if section == "Calories":
+            avg_cal, max_cal, global_avg, vs_avg_pct = get_calories_metrics(daily_activity_df, Id)
+
+            if vs_avg_pct >= 15:
+                cal_category = " High Burner"
+            elif vs_avg_pct <= -15:
+                cal_category = " Low Burner"
+            else:
+                cal_category = " Average Burner"
+
             m1, m2, m3, m4 = st.columns(4)
-            m1.metric("Metric1", f"Something (Rojin)")
-            m2.metric("Metric2", f"Something (Rojin)")
-            m3.metric("Metric3", f"Something (Rojin)")
-            m4.metric("3", f"Something (Rojin)")
+            m1.metric("Avg Daily Calories", f"{avg_cal:.0f} kcal")
+            m2.metric("Peak Day Calories", f"{max_cal:.0f} kcal")
+            m3.metric("vs. All Users", f"{vs_avg_pct:+.1f}%",
+                      help=f"Global average: {global_avg:.0f} kcal/day")
+            m4.metric("Burner Category", cal_category)
 
             row1_col1, row1_col2 = st.columns(2)
             with row1_col1:
                 plot_regression_calories(daily_activity_df, Id)
-            with row2_col1:
-                plot_calories_by_block_per_id(Id)
+            with row1_col2:
+                plot_calories_by_block_per_id(hourly_calories_df, Id)
 
             row2_col1, row2_col2 = st.columns(2)
             with row2_col1:
@@ -291,23 +385,35 @@ with id_tab:
                 st.write("plot_user_vs_global_calories(Id, connection)")  # Aimee
 
         if section == "Intensity":
+            df_id_intensity = intensity_df[intensity_df["Id"] == Id]
+
+            avg_intensity = df_id_intensity["AverageIntensity"].mean()
+            max_intensity = df_id_intensity["TotalIntensity"].max()
+            most_active_h = (df_id_intensity.groupby("Hour")["AverageIntensity"]
+                             .mean().idxmax() if not df_id_intensity.empty else "N/A")
+            weekend_avg = df_id_intensity[df_id_intensity["IsWeekend"]]["AverageIntensity"].mean()
+            weekday_avg = df_id_intensity[~df_id_intensity["IsWeekend"]]["AverageIntensity"].mean()
+            wk_diff = ((weekend_avg - weekday_avg) / weekday_avg * 100
+                       if weekday_avg and weekday_avg != 0 else 0)
+
             m1, m2, m3, m4 = st.columns(4)
-            m1.metric("Metric1", f"Something (Rojin)")
-            m2.metric("Metric2", f"Something (Rojin)")
-            m3.metric("Metric3", f"Something (Rojin) ")
-            m4.metric("3", f"Something (Rojin)")
+            m1.metric("Avg Intensity", f"{avg_intensity:.2f}")
+            m2.metric("Peak Total Intensity", f"{max_intensity}")
+            m3.metric("Most Intense Hour", f"{most_active_h}:00")
+            m4.metric("Weekend vs Weekday", f"{wk_diff:+.1f}%",
+                      help="Positive = more intense on weekends")
 
             row1_col1, row1_col2 = st.columns(2)
             with row1_col1:
-                st.write("Average intensity by hour (Rojin)")
+                plot_intensity_by_hour_for_id(intensity_df, Id)
             with row1_col2:
-                st.write("Steps vs total intensity per user (Rojin)")
+                plot_steps_vs_intensity(intensity_df, hourly_activity_df, Id)
 
             row2_col1, row2_col2 = st.columns(2)
             with row2_col1:
                 st.write("Heart rate vs intensity (Eva)")
             with row2_col2:
-                st.write("Average intensity by day of week (Rojin)")
+                plot_intensity_by_dow_for_id(intensity_df, Id)
 
         if section == "Weight":
             m1, m2, m3, m4 = st.columns(4)

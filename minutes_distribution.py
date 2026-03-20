@@ -7,29 +7,34 @@ import streamlit as st
 import plotly.express as px
 
 
-def distribution_activity_minutes_for_id(df,Id):
+def distribution_activity_minutes_for_id(df,user_id):
     """
            Plot distribution of activity minutes per day for a selected user.
 
            Args:
-               df: activity dataframe containing "Id", "ActivityDate", "VeryActiveMinutes", "FairlyActiveMinutes",
+               df: Activity dataframe containing "Id", "ActivityDate", "VeryActiveMinutes", "FairlyActiveMinutes",
                "LightlyActiveMinutes", and "SedentaryMinutes"
+               user_id: The Id of the user to analyze
 
-           Returns:
-                plotly figure object
            """
 
     # Filter activity data for given Id
-    df_id = df[df["Id"] == Id].copy()
+    df_id = df[df["Id"] == user_id].copy()
 
     if df_id.empty:
-        st.write("No activity data available for this user")
+        st.info("No activity data available for this user")
         return
 
     # Order the columns to go from Sedentary to VeryActive
     minutes_df = df_id[["ActivityDate", "SedentaryMinutes", "LightlyActiveMinutes", "FairlyActiveMinutes", "VeryActiveMinutes"]].copy()
 
-    labels = ["SedentaryMinutes", "LightlyActiveMinutes", "FairlyActiveMinutes", "VeryActiveMinutes"]
+    # Rename columns
+    minutes_df = minutes_df.rename(columns={"SedentaryMinutes": "Sedentary",
+                                    "LightlyActiveMinutes": "Lightly active",
+                                    "FairlyActiveMinutes": "Fairly active",
+                                    "VeryActiveMinutes": "Very active"})
+
+    labels = ["Sedentary", "Lightly active", "Fairly active", "Very active"]
     # Convert to percentages
     minutes_df["Total Minutes"] = minutes_df[labels].sum(axis=1)
     for zone in labels:
@@ -38,8 +43,8 @@ def distribution_activity_minutes_for_id(df,Id):
     # Stacked bar chart of the minutes dataframe
     fig = px.bar(minutes_df,
                  x = "ActivityDate",
-                 y = ["SedentaryMinutes", "LightlyActiveMinutes", "FairlyActiveMinutes", "VeryActiveMinutes"],
-                 title = f"Daily distribution of activity minutes for user {Id}",
+                 y = ["Sedentary", "Lightly active", "Fairly active", "Very active"],
+                 title = f"Daily distribution of activity minutes for user {user_id}",
                  color_discrete_sequence= px.colors.sequential.Blues_r)
 
     fig.update_layout(barmode ="stack",

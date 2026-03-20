@@ -237,6 +237,6 @@ def get_5_best_days(user_id, con):
 
 view_by = "Total activity"
 Id = 4319703577
-con = sqlite3.connect(r"C:\Users\jonge\PycharmProjects\Data Engineering\Project-Fitbit\fitbit_database.db")
+#con = sqlite3.connect(r"C:\Users\jonge\PycharmProjects\Data Engineering\Project-Fitbit\fitbit_database.db")
 #plot_user_activity_4_weeks(Id, con, view_by)
-bar_average_activity_week(Id, con)
+#bar_average_activity_week(Id, con)

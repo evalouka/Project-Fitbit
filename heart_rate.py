@@ -140,7 +140,7 @@ def plot_heart_rate_vs_activity_with_intensity(hr_data, activity_data, intensity
 def plot_hr_zones(df, user_id, view_by):
     """
           Plot proportion of observations spent in different heart rate zones per day or
-          average proportion per hour for a selected user.
+          per hour for a selected user.
 
           Args:
               df: heart rate dataframe containing "Id", "Time", and "Value"
@@ -174,9 +174,9 @@ def plot_hr_zones(df, user_id, view_by):
     labels = ["Rest", "Very Light", "Light", "Moderate", "Heavy", "Maximum"]
 
     # Assign a zone to each record for the Id, based on the percentage of the max heart rate
-    heart_rate_df["Zone"] = pd.cut(heart_rate_df["Value"]/max_hr, bins= bins, labels = labels)
+    heart_rate_df["Zone"] = pd.cut(heart_rate_df["Value"]/max_hr, bins= bins, labels= labels)
 
-    # Count observations in heart rate zone
+    # Count observations in heart rate zones
     zones_df = heart_rate_df.groupby(["Time", "Zone"]).size().unstack()
     zones_df = zones_df.reindex(columns = labels, fill_value=0)
 
@@ -211,7 +211,7 @@ def plot_hr_zones(df, user_id, view_by):
 
 def mean_HR_per_group_compared_to_id(df, user_id, selected):
     """
-           Plots the mean heart rate per hour of a selected user and compare to the mean heart rate per hour
+           Plots the mean heart rate per hour of a selected user and compares it to the mean heart rate per hour
            of selected user classes.
 
            Args:
@@ -305,7 +305,7 @@ def HR_zones_per_group(df):
     #  Assign a zone to each record for the Id, based on the percentage of the max heart rate
     heart_rate_df["Zone"] = pd.cut(heart_rate_df["Value"] / heart_rate_df["Max HR"], bins=bins, labels=labels)
 
-    # Calculate how many minutes are spent in each zone
+    # Count observations in heart rate zones spent in each zone
     zones_df = heart_rate_df.groupby(["Id", "Class", "Zone"]).size().unstack()
     zones_df = zones_df.reindex(columns=labels, fill_value=0)
 

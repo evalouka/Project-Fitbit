@@ -23,7 +23,7 @@ def plot_regression_calories(df, user_id):
     # Store calories in response variable y
     y = df["Calories"]
 
-    # Store calories in independent variable x
+    # Store TotalSteps in independent variable x
     x = df[["TotalSteps"]]
 
     # Filter data for given Id

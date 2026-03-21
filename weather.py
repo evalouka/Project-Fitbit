@@ -49,7 +49,7 @@ def plot_weather_vs_activity_per_id(df1, df2, Id, choose):
             title = f"Temperature vs Total Steps for user {Id}"
 
 
-    # Make regression model for Precipitation vs TotalSteps
+    # Fit regression model
     x_reg = merged_df[x]
     id_dummies = pd.get_dummies(merged_df["Id"], drop_first=True)
     x_reg = pd.concat([x_reg, id_dummies], axis=1)
@@ -63,7 +63,7 @@ def plot_weather_vs_activity_per_id(df1, df2, Id, choose):
         st.write("No activity data available for this user")
 
 
-    # Find regression line for Precipitation vs TotalSteps
+    # Fit regression line
     base = result.params["const"]
     id_variable = result.params.get(Id, 0.0)
     intercept = base + id_variable
@@ -136,7 +136,7 @@ def plot_weather_vs_activity(weather_data, activity_data, choose):
     x_reg = sm.add_constant(x_reg)
     result = sm.OLS(y,x_reg).fit()
 
-    # Find regression line for Temperature vs TotalSteps
+    # Fit regression line
     intercept = result.params["const"]
     slope = result.params[x]
     x_line = np.linspace(merged_df[x].min(), merged_df[x].max(), 100)

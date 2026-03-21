@@ -15,7 +15,6 @@ The project is divided into 5 parts:
 - *Part 3* – Database querying and multi-table analysis
 - *Part 4* – Data wrangling, merging, and aggregation
 - *Part 5* – Interactive Streamlit dashboard
-![img.png](img.png)
 
 ## Project Structure
 ```
@@ -87,29 +86,26 @@ Daily weather data for Chicago covering March–April 2016, containing 33 featur
 ##  Requirements
 
 
-Install all dependencies with:
-bash
-pip install -r requirements.txt
 
+| Package     | Version | Purpose                                      |
+|-------------|---------|----------------------------------------------|
+| matplotlib  | 3.3.4   | Plotting and data visualization              |
+| numpy       | 1.23.5  | Numerical computations                       |
+| pandas      | 1.5.3   | Data manipulation and analysis               |
+| plotly      | 6.6.0   | Interactive charts                           |
+| scipy       | 1.6.2   | Statistical analysis and regression          |
+| statsmodels | 0.12.2  | Advanced statistical modeling                |
+| streamlit   | 1.40.1  | Web app / dashboard interface                |
+| jinja2      | 3.1.6   | Table styling and formatted output           |
+| Python      | 3.8.8   | Programming language used to run the project |
 
-| Package | Version | Purpose |
-|------------|---------|---------|
-| matplotlib | 3.10.8 | Plotting and data visualization |
-| numpy | 2.4.3 | Numerical computations |
-| pandas | 3.0.1 | Data manipulation and analysis |
-| plotly | 6.6.0 | Interactive charts |
-| scipy | 1.17.1 | Statistical analysis and regression |
-| statsmodels | 0.14.6 | Advanced statistical modeling |
-| streamlit | 1.55.0 | Web app / dashboard interface |
 
 ---
 
 ## How to Run
 
 ### 1. Install dependencies
-bash
-pip install -r requirements.txt
-
+Find right versions in table above
 
 ### 2. Run the Dashboard
 bash

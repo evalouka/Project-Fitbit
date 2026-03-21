@@ -3,7 +3,8 @@ This script provides functions for heart rate analysis and visualization.
 
 The file contains functions to plot mean heart rate by day/hour, visualize the relationship between heart
 rate and activity/intensity, visualize time spent in heart rate zones per user/class, and to compare the mean
-heart rate of a user to different classes.
+heart rate of a user to different classes. In addition, it provides a visualization of the intensity and heart rate when performing
+an exercise on a certain time and date. 
 
 """
 
@@ -11,6 +12,9 @@ import pandas as pd
 from user_classification import classify_users
 import streamlit as st
 import plotly.express as px
+import sqlite3
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 
 def plot_mean_heart_rate(df, Id, view_by):
@@ -371,3 +375,51 @@ def HR_zones_per_group(df):
 
 
 
+
+
+def plot_user_data(user_id):
+    # Connect to database
+    conn = sqlite3.connect("fitbit_database.db")
+    
+    # --- Query heart rate ---
+    heart_query = f"""
+    SELECT Time, Value
+    FROM heart_rate
+    WHERE Id = {float(user_id)}
+    """
+    
+    heart_df = pd.read_sql_query(heart_query, conn)
+    
+    # --- Query intensity ---
+    intensity_query = f"""
+    SELECT ActivityHour, TotalIntensity
+    FROM hourly_intensity
+    WHERE Id = {float(user_id)}
+    """
+    
+    intensity_df = pd.read_sql_query(intensity_query, conn)
+    
+    conn.close()
+    
+    # --- Convert to datetime ---
+    heart_df['Time'] = pd.to_datetime(heart_df['Time'], format='%m/%d/%Y %I:%M:%S %p')
+    intensity_df['ActivityHour'] = pd.to_datetime(intensity_df['ActivityHour'], format='%m/%d/%Y %I:%M:%S %p')
+    
+    # --- Create plot ---
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+
+    fig.update_yaxes(title_text="Heart Rate (bpm)", secondary_y=False)
+    fig.update_yaxes(title_text="Total Intensity", secondary_y=True)
+
+    fig.add_trace(go.Scatter(x=heart_df['Time'], y=heart_df['Value'],
+              mode='lines', name='Heart Rate (bpm)',
+              hovertemplate="Time: %{x}<br>Heart Rate: %{y} bpm<extra></extra>"), 
+              secondary_y=False)
+    fig.add_trace(go.Scatter(x=intensity_df['ActivityHour'], y=intensity_df['TotalIntensity'],
+              mode='lines', name='Total Intensity',
+              hovertemplate="Time: %{x}<br>Intensity: %{y}<extra></extra>"), 
+              secondary_y=True)
+    
+    fig.update_layout(title=f"Heart Rate vs Exercise Intensity for User {user_id}")
+    
+    return fig

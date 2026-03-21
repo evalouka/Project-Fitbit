@@ -1,5 +1,7 @@
 import pandas as pd
 import plotly.express as px
+import plotly.io as pio
+pio.renderers.default = "browser"
 
 df = pd.read_csv("daily_activity.csv")
 

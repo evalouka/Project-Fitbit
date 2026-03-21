@@ -1,4 +1,4 @@
-Fitbit Data Analysis Dashboard
+## Fitbit Data Analysis Dashboard
 
 A data analysis project that explores Fitbit usage data collected from 35 participants in 2016. The project covers statistical analysis, data visualization, database querying, and an interactive dashboard built with Streamlit.
 
@@ -18,7 +18,7 @@ The project is divided into 5 parts:
 ![img.png](img.png)
 
 ## Project Structure
-
+```
 Project-Fitbit/
 │
 ├── main.py                          # Entry point of the application
@@ -33,7 +33,8 @@ Project-Fitbit/
 ├── minutes_distribution.py          # Activity minutes distribution
 ├── sleep.py                         # Sleep data processing
 ├── sleep_activity.py                # Sleep & activity correlation
-├── step.py                          # Step count analysis
+├── step.py                          # Step count analysis and sleep & sedentary minutes regression
+├── normality check.py               # Normality check for errors of sleep & sedentary minutes regression model   
 
 ├── user_classification.py           # User segmentation/classification
 ├── weather.py                       # Weather data integration
@@ -57,7 +58,7 @@ Project-Fitbit/
 ├── weather_data/
 │   └── Chicago_weather_march_april.csv
 
-
+```
 
 
 ## Dataset
@@ -112,7 +113,7 @@ pip install -r requirements.txt
 
 ### 2. Run the Dashboard
 bash
-streamlit run dashboard.py
+streamlit run main.py
 
 > Make sure fitbit_database.db is in the root project folder before running.
 
@@ -127,6 +128,7 @@ Explores daily_activity data from the Fitbit database, including:
 - Workout frequency by day of the week
 - OLS regression: Calories ~ TotalSteps + Id
 - Per-user regression visualization
+- Distribution of activity minutes per user
 
 ### Part 3 – Database Analysis
 Connects to fitbit_database.db via sqlite3 and includes:
@@ -136,6 +138,8 @@ Connects to fitbit_database.db via sqlite3 and includes:
 - Activity broken into 4-hour time blocks (steps, calories, sleep)
 - Heart rate and exercise intensity visualization per user
 - Weather data integration and activity correlation
+- Intensity analysis
+
 
 ### Part 4 – Data Wrangling
 Focuses on cleaning and preparing data for the dashboard:
@@ -180,5 +184,5 @@ An interactive Streamlit dashboard with:
 
 ## Notes
 - All scripts assume fitbit_database.db is in the root project folder. Adjust the path if needed.
-- The dataset covers activity from *33 Fitbit users* over several weeks in *2016*.
+- The dataset covers activity from *35 Fitbit users* over several weeks in *2016*.
 - This README will be updated continuously as the project develops.

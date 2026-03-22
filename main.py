@@ -235,6 +235,7 @@ def load_activity_distance_data():
     df["Id"] = df["Id"].astype('int64').round().astype(str)
     return df
 
+
 activity_distance_df = load_activity_distance_data()
 heart_rate_df = load_hr_data()
 daily_activity_df = load_daily_activity_data()
@@ -287,9 +288,9 @@ with general_tab:
 
     row2_col1, row2_col2 = st.columns(2)
     with row2_col1:
-        plot_steps_by_block_general(hourly_activity_df)
+        HR_zones_per_group(heart_rate_df)
     with row2_col2:
-        st.plotly_chart(plot_days_over_10k(daily_activity_df), use_container_width=True)
+        plot_steps_by_block_general(hourly_activity_df)
 
     choose_col1, choose_col2 = st.columns(2)
     with choose_col2:
@@ -297,12 +298,14 @@ with general_tab:
 
     row3_col1, row3_col2 = st.columns(2)
     with row3_col1:
-        st.plotly_chart(plot_activity_distance_breakdown(activity_distance_df), use_container_width=True)
+        st.plotly_chart(plot_days_over_10k(daily_activity_df), use_container_width=True)
     with row3_col2:
         plot_weather_vs_activity(weather_df, daily_activity_df, choose)
     row4_col1, row4_col2 = st.columns(2)
     with row4_col1:
-        HR_zones_per_group(heart_rate_df)
+        st.plotly_chart(plot_activity_distance_breakdown(activity_distance_df), use_container_width=True)
+    with row4_col2:
+        st.plotly_chart(plot_activity_time_breakdown(activity_minutes_df), use_container_width=True)
 
 with id_tab:
     col1, col2 = st.columns([1, 6])

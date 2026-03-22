@@ -38,7 +38,7 @@ def individual_sleep_activity_corr(user_id, activity_induvidual_df, sleep_df):
     df_combined = pd.merge(df_sleep, df_active, on="get_date")
 
     if df_combined.empty:
-        print(f"No matching dates found for user {user_id_str}.")
+        st.info(f"No matching dates found for user {user_id_str}.")
         return None
 
     fig = px.scatter(df_combined, x='duration_minutes', y='active_minutes', 
@@ -70,14 +70,14 @@ def print_sleep_activity_corr(user_id, activity_induvidual_df, sleep_df):
     
     df_sleep['get_date'] = pd.to_datetime(df_sleep['clean_date'])
     df_active['get_date'] = pd.to_datetime(df_active['ActivityDate'])
+
+    if df_sleep.empty or df_active.empty:
+        return "N/A", "No data available", "No sleep or activity data found for this user."
     
     df_combined = pd.merge(df_sleep, df_active, on="get_date")
     
-    if df_sleep.empty or df_active.empty:
-        return "N/A", "No data available", "No sleep or activity data found for this user."
-
     if df_combined.empty:
-        return "N/A", "No data available", "No overlapping dates found for sleep and activity data."
+        return None, "No data available", "No overlapping dates found for sleep and activity data."
     
     correlation = df_combined['active_minutes'].corr(df_combined['duration_minutes'])
 

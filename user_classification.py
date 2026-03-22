@@ -50,6 +50,8 @@ def classify_users(db_path='fitbit_database.db'):
     
     return df_classification[['Id', 'Class']]
 
+dataframe = classify_users()
+print(dataframe.head())
 
 def get_user_stats_by_class(db_path='fitbit_database.db'):
     """

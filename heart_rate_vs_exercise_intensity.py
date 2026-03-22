@@ -1,11 +1,10 @@
 """
 Part 3: Heart Rate and Exercise Intensity Analysis
-File: part3_heart_rate_intensity.py
 
 This script provides functions to visualize heart rate and exercise intensity
 for individual Fitbit users.
 
-Note: You neet to call this function with an ID. Otherwise it does not work!!
+Note: You need to call this function with an ID. Otherwise it does not work!!
 """
 
 import pandas as pd
@@ -13,6 +12,65 @@ import sqlite3
 import matplotlib.pyplot as plt
 import numpy as np
 from datetime import datetime
+import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import plotly.io as pio
+pio.renderers.default = "browser"
+
+connection = sqlite3.connect("fitbit_database.db")
+cursor = connection.cursor()
+cursor.execute("SELECT DISTINCT Id FROM heart_rate LIMIT 5")
+print(cursor.fetchall())
+
+def plot_user_data(user_id):
+    # Connect to database
+    conn = sqlite3.connect("fitbit_database.db")
+    
+    # --- Query heart rate ---
+    heart_query = f"""
+    SELECT Time, Value
+    FROM heart_rate
+    WHERE Id = {float(user_id)}
+    """
+    
+    heart_df = pd.read_sql_query(heart_query, conn)
+    
+    # --- Query intensity ---
+    intensity_query = f"""
+    SELECT ActivityHour, TotalIntensity
+    FROM hourly_intensity
+    WHERE Id = {float(user_id)}
+    """
+    
+    intensity_df = pd.read_sql_query(intensity_query, conn)
+    
+    conn.close()
+    
+    # --- Convert to datetime ---
+    heart_df['Time'] = pd.to_datetime(heart_df['Time'], format='%m/%d/%Y %I:%M:%S %p')
+    intensity_df['ActivityHour'] = pd.to_datetime(intensity_df['ActivityHour'], format='%m/%d/%Y %I:%M:%S %p')
+    
+    # --- Create plot ---
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+
+    fig.update_yaxes(title_text="Heart Rate (bpm)", secondary_y=False)
+    fig.update_yaxes(title_text="Total Intensity", secondary_y=True)
+
+    fig.add_trace(go.Scatter(x=heart_df['Time'], y=heart_df['Value'],
+              mode='lines', name='Heart Rate (bpm)',
+              hovertemplate="Time: %{x}<br>Heart Rate: %{y} bpm<extra></extra>"), 
+              secondary_y=False)
+    fig.add_trace(go.Scatter(x=intensity_df['ActivityHour'], y=intensity_df['TotalIntensity'],
+              mode='lines', name='Total Intensity',
+              hovertemplate="Time: %{x}<br>Intensity: %{y}<extra></extra>"), 
+              secondary_y=True)
+    
+    fig.update_layout(title=f"Heart Rate vs Exercise Intensity for User {user_id}")
+    
+    return fig
+    
+
 
 def plot_heart_rate_and_intensity(user_id, db_path='fitbit_database.db', date_range=None):
     """
@@ -253,28 +311,3 @@ def compare_heart_rate_intensity_correlation(user_id, db_path='fitbit_database.d
     print(f"  Correlation coefficient: {correlation:.3f}")
     
     return correlation
-
-
-# Example usage and testing
-if __name__ == "__main__":
-    print("="*80)
-    print("PART 3: HEART RATE AND INTENSITY ANALYSIS")
-    print("="*80)
-    print()
-    
-    # Example: Analyze first user from the dataset
-    # Note: You'll need to replace this with actual user IDs from your database
-    
-    print("This module provides functions to analyze heart rate and intensity.")
-    print()
-    print("Available functions:")
-    print("  1. plot_heart_rate_and_intensity(user_id)")
-    print("  2. analyze_heart_rate_zones(user_id)")
-    print("  3. compare_heart_rate_intensity_correlation(user_id)")
-    print()
-    print("Example usage:")
-    print("  >>> plot_heart_rate_and_intensity(1503960366)")
-    print("  >>> zones = analyze_heart_rate_zones(1503960366)")
-    print("  >>> correlation = compare_heart_rate_intensity_correlation(1503960366)")
-    print()
-    print("="*80)

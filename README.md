@@ -20,33 +20,31 @@ The project is divided into 5 parts:
 
 Project-Fitbit/
 │
-├── main.py                          # Entry point of the application
+├── main.py                          # Streamlit dashboard entry point
 │
 ├── # --- Analysis Modules ---
 ├── activity_logs.py                 # Activity log processing
+├── basic_inspection_csvdata.py      # Basic data inspection and visualizations
 ├── calories.py                      # Calorie data analysis
 ├── calories_regression.py           # Calorie regression modeling
 ├── heart_rate.py                    # Heart rate data processing
-├── heart_rate_vs_exercise_intensity.py  # Heart rate vs. intensity analysis
 ├── intensity.py                     # Intensity metrics
 ├── minutes_distribution.py          # Activity minutes distribution
+├── normality check.py               # Normality check for regression model errors
 ├── sleep.py                         # Sleep data processing
 ├── sleep_activity.py                # Sleep & activity correlation
-├── step.py                          # Step count analysis and sleep & sedentary minutes regression
-├── normality check.py               # Normality check for errors of sleep & sedentary minutes regression model   
-
+├── step.py                          # Step count analysis and sleep & sedentary regression
 ├── user_classification.py           # User segmentation/classification
 ├── weather.py                       # Weather data integration
+├── weight.py                        # Weight and BMI analysis
 │
-├── # --- Visualizations (Generated) ---
-├── calories_by_block.png
-├── calories_regression.png  (residuals_histogram, qq_plot, sedentary_sleep_regression)
-├── intensity_analysis.png   (plot1–plot5, steps_vs_intensity, etc.)
-├── sleep_by_block.png
-├── steps_by_block.png
-│
+├── # --- Data ---
 ├── fitbit_database.db               # Main SQLite database
-├── README.md
+├── daily_activity.csv               # Daily activity CSV file
+│
+├── # --- Configuration ---
+├── requirements.txt                 # Python dependencies
+├── README.md                        # Project documentation
 │
 ├── user_data/
 │   └── outputs/
@@ -54,8 +52,8 @@ Project-Fitbit/
 │       ├── user_classification_db.csv
 │       └── user_stats_by_class.csv
 │
-├── weather_data/
-│   └── Chicago_weather_march_april.csv
+└── weather_data/
+    └── chicago_weather_march_april.csv
 
 
 
@@ -169,12 +167,12 @@ An interactive Streamlit dashboard with:
 
 ## Contributors
 
-| Name | Role |
-|------|------|
-| Rojin Naseh | |
-| Naomi van Diermen | |
-| Eva Quist | |
-| Aimee de Jonge | |
+| Name |  
+|------|
+| Rojin Naseh | 
+| Naomi van Diermen |
+| Eva Quist | 
+| Aimee de Jonge | 
 
 ---
 

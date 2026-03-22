@@ -49,7 +49,7 @@ def load_hr_data():
     cursor.execute(query_heart_rate)
     rows = cursor.fetchall()
     heart_rate_df = pd.DataFrame(rows, columns=[x[0] for x in cursor.description]).copy()
-    heart_rate_df["Id"] = heart_rate_df["Id"].astype(str)
+    heart_rate_df["Id"] = heart_rate_df["Id"].astype('int64').astype(str)
     heart_rate_df["Value"] = pd.to_numeric(heart_rate_df["Value"])
     heart_rate_df["Time"] = pd.to_datetime(heart_rate_df["Time"], format="%m/%d/%Y %I:%M:%S %p")
     return heart_rate_df
@@ -57,7 +57,7 @@ def load_hr_data():
 
 @st.cache_data
 def load_unique_id():
-    return classify_users()["Id"].astype(str)
+    return classify_users()["Id"].astype('int64').astype(str)
 
 
 @st.cache_data
@@ -68,7 +68,7 @@ def load_daily_activity_data():
     rows = cursor.fetchall()
     daily_activity_df = pd.DataFrame(rows, columns=[x[0] for x in cursor.description]).copy()
     daily_activity_df["ActivityDate"] = pd.to_datetime(daily_activity_df["ActivityDate"])
-    daily_activity_df["Id"] = daily_activity_df["Id"].astype(str)
+    daily_activity_df["Id"] = daily_activity_df["Id"].astype('int64').astype(str)
     return daily_activity_df
 
 
@@ -81,7 +81,7 @@ def load_hourly_activity():
     cursor_activity.execute(query_activity)
     rows_activity = cursor_activity.fetchall()
     hourly_activity_df = pd.DataFrame(rows_activity, columns=[x[0] for x in cursor_activity.description]).copy()
-    hourly_activity_df["Id"] = hourly_activity_df["Id"].astype(str)
+    hourly_activity_df["Id"] = hourly_activity_df["Id"].astype('int64').astype(str)
     hourly_activity_df["ActivityHour"] = pd.to_datetime(hourly_activity_df["ActivityHour"])
     hourly_activity_df["Date"] = hourly_activity_df["ActivityHour"].dt.date
     hourly_activity_df["Hour"] = hourly_activity_df["ActivityHour"].dt.hour
@@ -96,7 +96,7 @@ def load_hourly_intensity():
     cursor_intensity.execute(query_intensity)
     rows_intensity = cursor_intensity.fetchall()
     intensity_df = pd.DataFrame(rows_intensity, columns=[x[0] for x in cursor_intensity.description]).copy()
-    intensity_df["Id"] = intensity_df["Id"].astype(str)
+    intensity_df["Id"] = intensity_df["Id"].astype('int64').astype(str)
     intensity_df["ActivityHour"] = pd.to_datetime(intensity_df["ActivityHour"])
     return intensity_df
 
@@ -117,7 +117,7 @@ def load_activity_minutes_data():
     cursor.execute(query_daily_activity)
     rows = cursor.fetchall()
     activity_minutes_df = pd.DataFrame(rows, columns=[x[0] for x in cursor.description]).copy()
-    activity_minutes_df["Id"] = activity_minutes_df["Id"].astype(str)
+    activity_minutes_df["Id"] = activity_minutes_df["Id"].astype('int64').astype(str)
     return activity_minutes_df
 
 @st.cache_data
@@ -139,7 +139,7 @@ def load_intensity_data():
     cursor.execute(query)
     rows = cursor.fetchall()
     df = pd.DataFrame(rows, columns=[x[0] for x in cursor.description]).copy()
-    df["Id"] = df["Id"].astype(str)
+    df["Id"] = df["Id"].astype('int64').astype(str)
     df["ActivityHour"] = pd.to_datetime(df["ActivityHour"])
     df["date"] = df["ActivityHour"].dt.date
     df["Hour"] = df["ActivityHour"].dt.hour
@@ -157,7 +157,7 @@ def load_minute_sleep():
     df["Hour"] = df["date"].dt.hour
     df["Date"] = df["date"].dt.date
     df["Block"] = pd.cut(df["Hour"], bins=bins, labels=labels, right=False)
-    df["Id"] = df["Id"].astype(str)
+    df["Id"] = df["Id"].astype('int64').astype(str)
     return df
 
 
@@ -170,7 +170,7 @@ def load_hourly_calories():
     df["Hour"] = df["ActivityHour"].dt.hour
     df["Date"] = df["ActivityHour"].dt.date
     df["Block"] = pd.cut(df["Hour"], bins=bins, labels=labels, right=False)
-    df["Id"] = df["Id"].astype(str)
+    df["Id"] = df["Id"].astype('int64').astype(str)
     return df
 
 @st.cache_data
@@ -180,7 +180,7 @@ def load_daily_sleep_data():
     cursor.execute(query)
     rows = cursor.fetchall()
     df = pd.DataFrame(rows, columns=[x[0] for x in cursor.description]).copy()
-    df["Id"] = df["Id"].astype(str)
+    df["Id"] = df["Id"].astype('int64').astype(str)
     df["date"] = pd.to_datetime(df["date"], format="%m/%d/%Y %I:%M:%S %p")
     df["SleepDay"] = df["date"].dt.date
     # count minutes where value == 1 (asleep) per user per day
@@ -195,7 +195,7 @@ def load_daily_sleep_data():
 def load_sleep_data():
     sleep_query = "SELECT Id, TRIM(SUBSTR(date, 1, INSTR(date, ' '))) as clean_date, value FROM minute_sleep WHERE value >= 1"
     df = pd.read_sql_query(sleep_query, connection)
-    df['Id'] = pd.to_numeric(df['Id'], errors='coerce').astype(str)
+    df['Id'] = pd.to_numeric(df['Id'], errors='coerce').astype('int64').astype(str)
     df['clean_date'] = pd.to_datetime(df['clean_date']).dt.date
     return df
 
@@ -205,7 +205,7 @@ def load_daily_activity_all_users():
     (VeryActiveMinutes + FairlyActiveMinutes + LightlyActiveMinutes) as daily_active_minutes 
     FROM daily_activity"""
     df = pd.read_sql_query(query, connection)
-    df['Id'] = pd.to_numeric(df['Id'], errors='coerce').astype(str)
+    df['Id'] = pd.to_numeric(df['Id'], errors='coerce').astype('int64').astype(str)
     df['ActivityDate'] = pd.to_datetime(df['ActivityDate'])
     return df
 
@@ -215,14 +215,14 @@ def load_user_activity():
     SUM(VeryActiveMinutes + FairlyActiveMinutes + LightlyActiveMinutes) as active_minutes 
     FROM daily_activity GROUP BY Id, ActivityDate"""
     df = pd.read_sql_query(query, connection)
-    df['Id'] = pd.to_numeric(df['Id'], errors='coerce').astype(str)
+    df['Id'] = pd.to_numeric(df['Id'], errors='coerce').astype('int64').astype(str)
     return df
 
 @st.cache_data
 def load_calories_data():
     query = "SELECT Id, ActivityDate, Calories FROM daily_activity"
     df = pd.read_sql_query(query, connection)
-    df['Id'] = pd.to_numeric(df['Id'], errors='coerce').astype(str)
+    df['Id'] = pd.to_numeric(df['Id'], errors='coerce').astype('int64').astype(str)
     df['ActivityDate'] = pd.to_datetime(df['ActivityDate'])
     return df
 
@@ -312,7 +312,7 @@ with id_tab:
     with col2:
         if section == "General":
             m1, m2, m3, m4 = st.columns(4)
-            id_class = classify_users()[classify_users()['Id'].astype(str) == Id]['Class'].values[0]
+            id_class = classify_users()[classify_users()['Id'].astype('int64').astype(str) == Id]['Class'].values[0]
             id_daily_activity = daily_activity_df[daily_activity_df['Id'] == Id]
             id_sleep_minutes = get_users_sleep_minutes(Id, sleep_df)['duration_minutes']
             m1.metric("You are a", id_class + " user")

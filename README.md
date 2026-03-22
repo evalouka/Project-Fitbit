@@ -10,14 +10,14 @@ This project was developed as part of a university assignment. Using real-world 
 
 The project is divided into 5 parts:
 
-- *Part 1* – Exploratory data analysis on daily activity data
-- *Part 2* – GitHub version control setup and collaboration
-- *Part 3* – Database querying and multi-table analysis
-- *Part 4* – Data wrangling, merging, and aggregation
-- *Part 5* – Interactive Streamlit dashboard
+- Part 1 – Exploratory data analysis on daily activity data
+- Part 2 – GitHub version control setup and collaboration
+- Part 3 – Database querying and multi-table analysis
+- Part 4 – Data wrangling, merging, and aggregation
+- Part 5 – Interactive Streamlit dashboard
 
 ## Project Structure
-```
+
 Project-Fitbit/
 │
 ├── main.py                          # Entry point of the application
@@ -57,7 +57,7 @@ Project-Fitbit/
 ├── weather_data/
 │   └── Chicago_weather_march_april.csv
 
-```
+
 
 
 ## Dataset
@@ -146,10 +146,10 @@ Focuses on cleaning and preparing data for the dashboard:
 
 ### Part 5 – Dashboard
 An interactive Streamlit dashboard with:
-- *Home page* — general statistics and visual summaries of the dataset
-- *Individual page* — select a user ID from the sidebar to view personal stats
-- *Time filter* — filter data by date range or time of day
-- *Sleep analysis* — explore variables that affect sleep duration
+- Home page — general statistics and visual summaries of the dataset
+- Individual page — select a user ID from the sidebar to view personal stats
+- Time filter — filter data by date range or time of day
+- Sleep analysis — explore variables that affect sleep duration
 
 ---
 
@@ -180,5 +180,5 @@ An interactive Streamlit dashboard with:
 
 ## Notes
 - All scripts assume fitbit_database.db is in the root project folder. Adjust the path if needed.
-- The dataset covers activity from *35 Fitbit users* over several weeks in *2016*.
+- The dataset covers activity from 35 Fitbit users over several weeks in 2016.
 - This README will be updated continuously as the project develops.

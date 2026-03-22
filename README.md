@@ -104,11 +104,22 @@ Daily weather data for Chicago covering March–April 2016, containing 33 featur
 
 ## How to Run
 
-### 1. Install dependencies
-Find right versions in table above
+# 1. Clone the repository
+git clone <your-repo-url>
 
-### 2. Run the Dashboard
-bash
+# 2. Navigate to the project folder
+cd Project-Fitbit
+
+# 3. Create a conda environment
+conda create -n fitbit_env python=3.8.8
+
+# 4. Activate it
+conda activate fitbit_env
+
+# 5. Install all dependencies
+pip install -r requirements.txt
+
+# 6. Run the dashboard
 streamlit run main.py
 
 > Make sure fitbit_database.db is in the root project folder before running.
@@ -120,6 +131,8 @@ streamlit run main.py
 ### Part 1 – Exploratory Data Analysis
 Explores daily_activity data from the Fitbit database, including:
 - Unique user count and total distance per user
+- Activity time and distance breakdown per user
+- Visualization of reaching 10k steps per day
 - Calories burned per day per user (with date range filtering)
 - Workout frequency by day of the week
 - OLS regression: Calories ~ TotalSteps + Id
@@ -140,6 +153,7 @@ Connects to fitbit_database.db via sqlite3 and includes:
 ### Part 4 – Data Wrangling
 Focuses on cleaning and preparing data for the dashboard:
 - Handling missing values in the weight_log table
+- Visualization of weight and BMI per user
 - Merging tables and grouping by individual user
 - Aggregating data by user, date range, and time of day
 - Preparing summaries for the dashboard
@@ -181,4 +195,3 @@ An interactive Streamlit dashboard with:
 ## Notes
 - All scripts assume fitbit_database.db is in the root project folder. Adjust the path if needed.
 - The dataset covers activity from 35 Fitbit users over several weeks in 2016.
-- This README will be updated continuously as the project develops.

@@ -10,15 +10,14 @@ This project was developed as part of a university assignment. Using real-world 
 
 The project is divided into 5 parts:
 
-- *Part 1* – Exploratory data analysis on daily activity data
-- *Part 2* – GitHub version control setup and collaboration
-- *Part 3* – Database querying and multi-table analysis
-- *Part 4* – Data wrangling, merging, and aggregation
-- *Part 5* – Interactive Streamlit dashboard
-![img.png](img.png)
+- Part 1 – Exploratory data analysis on daily activity data
+- Part 2 – GitHub version control setup and collaboration
+- Part 3 – Database querying and multi-table analysis
+- Part 4 – Data wrangling, merging, and aggregation
+- Part 5 – Interactive Streamlit dashboard
 
 ## Project Structure
-```
+
 Project-Fitbit/
 │
 ├── main.py                          # Entry point of the application
@@ -58,7 +57,7 @@ Project-Fitbit/
 ├── weather_data/
 │   └── Chicago_weather_march_april.csv
 
-```
+
 
 
 ## Dataset
@@ -87,29 +86,26 @@ Daily weather data for Chicago covering March–April 2016, containing 33 featur
 ##  Requirements
 
 
-Install all dependencies with:
-bash
-pip install -r requirements.txt
 
+| Package     | Version | Purpose                                      |
+|-------------|---------|----------------------------------------------|
+| matplotlib  | 3.3.4   | Plotting and data visualization              |
+| numpy       | 1.23.5  | Numerical computations                       |
+| pandas      | 1.5.3   | Data manipulation and analysis               |
+| plotly      | 6.6.0   | Interactive charts                           |
+| scipy       | 1.6.2   | Statistical analysis and regression          |
+| statsmodels | 0.12.2  | Advanced statistical modeling                |
+| streamlit   | 1.40.1  | Web app / dashboard interface                |
+| jinja2      | 3.1.6   | Table styling and formatted output           |
+| Python      | 3.8.8   | Programming language used to run the project |
 
-| Package | Version | Purpose |
-|------------|---------|---------|
-| matplotlib | 3.10.8 | Plotting and data visualization |
-| numpy | 2.4.3 | Numerical computations |
-| pandas | 3.0.1 | Data manipulation and analysis |
-| plotly | 6.6.0 | Interactive charts |
-| scipy | 1.17.1 | Statistical analysis and regression |
-| statsmodels | 0.14.6 | Advanced statistical modeling |
-| streamlit | 1.55.0 | Web app / dashboard interface |
 
 ---
 
 ## How to Run
 
 ### 1. Install dependencies
-bash
-pip install -r requirements.txt
-
+Find right versions in table above
 
 ### 2. Run the Dashboard
 bash
@@ -150,10 +146,10 @@ Focuses on cleaning and preparing data for the dashboard:
 
 ### Part 5 – Dashboard
 An interactive Streamlit dashboard with:
-- *Home page* — general statistics and visual summaries of the dataset
-- *Individual page* — select a user ID from the sidebar to view personal stats
-- *Time filter* — filter data by date range or time of day
-- *Sleep analysis* — explore variables that affect sleep duration
+- Home page — general statistics and visual summaries of the dataset
+- Individual page — select a user ID from the sidebar to view personal stats
+- Time filter — filter data by date range or time of day
+- Sleep analysis — explore variables that affect sleep duration
 
 ---
 
@@ -184,5 +180,5 @@ An interactive Streamlit dashboard with:
 
 ## Notes
 - All scripts assume fitbit_database.db is in the root project folder. Adjust the path if needed.
-- The dataset covers activity from *35 Fitbit users* over several weeks in *2016*.
+- The dataset covers activity from 35 Fitbit users over several weeks in 2016.
 - This README will be updated continuously as the project develops.

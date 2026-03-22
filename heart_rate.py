@@ -223,7 +223,7 @@ def mean_HR_per_group_compared_to_id(df, user_id, selected):
 
     # Get report to know the class of each Id
     report = classify_users()
-    report["Id"] = report["Id"].astype(str)
+    report["Id"] = report["Id"].astype('int64').astype(str)
     heart_rate_df = df.copy()
     heart_rate_df["Hour"] = heart_rate_df["Time"].dt.hour
 
@@ -288,7 +288,7 @@ def HR_zones_per_group(df):
 
     # Get report to know the class of each Id
     report = classify_users()
-    report["Id"] = report["Id"].astype(str)
+    report["Id"] = report["Id"].astype('int64').astype(str)
 
     heart_rate_df = df.copy()
 

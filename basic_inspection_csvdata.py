@@ -56,8 +56,7 @@ def plot_ten_k_steps(df):
     values = [users_hitting, (unique_users - users_hitting)]
 
     fig = px.pie(names=names, values=values,
-                 title="Users Reaching 10,000 Steps (At Least Once)",
-                 color_discrete_sequence=["green", "red"])
+                 title="Users Reaching 10,000 Steps (At Least Once)")
     fig.update_traces(pull=[0, 0.05])
     return fig
 

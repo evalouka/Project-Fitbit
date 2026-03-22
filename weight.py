@@ -52,19 +52,22 @@ def plot_weight_trend(weight_df):
 def average_bmi(user_id):
     conn = sqlite3.connect("fitbit_database.db")
     bmi_df = pd.read_sql_query("""
-        SELECT CAST(ROUND(Id) AS INTEGER) as Id, AVG(BMI) as AvgBMI
+        SELECT Id, AVG(BMI) as AvgBMI
         FROM weight_log
         GROUP BY CAST(ROUND(Id) AS INTEGER)
     """, conn)
     conn.close()
 
     group_average = bmi_df["AvgBMI"].mean()
-    bmi_df["Id"] = bmi_df["Id"].astype(int).astype(str)
-    user_bmi = bmi_df[bmi_df["Id"] == str(int(float(user_id)))].copy()
+    bmi_df["Id"] = bmi_df["Id"].astype('int64').astype(str)
+
+    user_bmi = bmi_df[bmi_df["Id"] == str(user_id)].copy()
+
 
     fig = px.bar(user_bmi, x="Id", y="AvgBMI",
                  labels={"Id": "User Id", "AvgBMI": "Average BMI"},
                  title=f"Average BMI: User {user_id} vs Group Average")
+    fig.update_xaxes(type="category")
     fig.add_hline(y=group_average, line_dash="dash",
                   line_color="red", annotation_text="Group Average")
     return fig

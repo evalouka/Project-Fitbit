@@ -232,7 +232,7 @@ def load_activity_distance_data():
                LightActiveDistance, SedentaryActiveDistance 
                FROM daily_activity"""
     df = pd.read_sql_query(query, connection)
-    df["Id"] = df["Id"].round().astype(int).astype(str)
+    df["Id"] = df["Id"].astype('int64').round().astype(str)
     return df
 
 activity_distance_df = load_activity_distance_data()
@@ -291,17 +291,18 @@ with general_tab:
     with row2_col2:
         st.plotly_chart(plot_days_over_10k(daily_activity_df), use_container_width=True)
 
+    choose_col1, choose_col2 = st.columns(2)
+    with choose_col2:
+        choose = st.radio("Choose", ["Precipitation", "Temperature"], horizontal=True, key="weather_general")
+
     row3_col1, row3_col2 = st.columns(2)
     with row3_col1:
         st.plotly_chart(plot_activity_distance_breakdown(activity_distance_df), use_container_width=True)
     with row3_col2:
-        choose = st.radio("Choose", ["Precipitation", "Temperature"], horizontal=True, key="weather_general")
-
+        plot_weather_vs_activity(weather_df, daily_activity_df, choose)
     row4_col1, row4_col2 = st.columns(2)
     with row4_col1:
         HR_zones_per_group(heart_rate_df)
-    with row4_col2:
-        plot_weather_vs_activity(weather_df, daily_activity_df, choose)
 
 with id_tab:
     col1, col2 = st.columns([1, 6])
@@ -474,15 +475,13 @@ with id_tab:
                 plot_calories_by_block_per_id(hourly_calories_df, Id)
 
             view_col_1, view_col_2 = st.columns(2)
-            with view_col_2:
+            with view_col_1:
                 view_by = st.selectbox("View by", ["Last week", "All data"], key="calories_view")
 
             row2_col1, row2_col2 = st.columns(2)
             with row2_col1:
-                st.write("Eva do you have something about calories?")
-
-            with row2_col2:
                 plot_user_vs_global_calories(Id, calories_df, view_by)
+
 
         if section == "Intensity":
             df_id_intensity = intensity_df[intensity_df["Id"] == Id]

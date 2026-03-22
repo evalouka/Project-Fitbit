@@ -38,7 +38,7 @@ def individual_sleep_activity_corr(user_id, activity_induvidual_df, sleep_df):
     df_combined = pd.merge(df_sleep, df_active, on="get_date")
 
     if df_combined.empty:
-        print(f"No matching dates found for user {user_id_str}.")
+        st.info(f"No matching dates found for user {user_id_str}.")
         return None
 
     fig = px.scatter(df_combined, x='duration_minutes', y='active_minutes', 

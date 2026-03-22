@@ -88,15 +88,15 @@ Daily weather data for Chicago covering March–April 2016, containing 33 featur
 
 | Package     | Version | Purpose                                      |
 |-------------|---------|----------------------------------------------|
-| matplotlib  | 3.3.4   | Plotting and data visualization              |
-| numpy       | 1.23.5  | Numerical computations                       |
+| matplotlib  | 3.7.0   | Plotting and data visualization              |
+| numpy       | 1.24.0  | Numerical computations                       |
 | pandas      | 1.5.3   | Data manipulation and analysis               |
 | plotly      | 6.6.0   | Interactive charts                           |
-| scipy       | 1.6.2   | Statistical analysis and regression          |
-| statsmodels | 0.12.2  | Advanced statistical modeling                |
+| scipy       | 1.9.3   | Statistical analysis and regression          |
+| statsmodels | 0.13.5  | Advanced statistical modeling                |
 | streamlit   | 1.40.1  | Web app / dashboard interface                |
 | jinja2      | 3.1.6   | Table styling and formatted output           |
-| Python      | 3.8.8   | Programming language used to run the project |
+| Python      | 3.11   | Programming language used to run the project |
 
 
 ---

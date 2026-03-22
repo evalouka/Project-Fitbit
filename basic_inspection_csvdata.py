@@ -1,5 +1,6 @@
 import pandas as pd
 import plotly.express as px
+import streamlit as st
 
 #df = pd.read_csv("daily_activity.csv")
 
@@ -38,12 +39,11 @@ def plot_activity_distance_breakdown(df):
     activity_minute_cols = ["VeryActiveDistance", "ModeratelyActiveDistance", "LightActiveDistance", "SedentaryActiveDistance"]
     activity_minute_df = df.groupby("Id")[activity_minute_cols].sum().reset_index()
 
-
     fig = px.bar(activity_minute_df, x="Id", y=activity_minute_cols,
                  barmode="stack",
                  title="Distance breakdown per User")
     fig.update_yaxes(title_text="Distance")
-    fig.update_xaxes(title_text="User Id")
+    fig.update_xaxes(title_text="User Id", type = "category")
     return fig
 
 

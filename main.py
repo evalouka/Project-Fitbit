@@ -335,7 +335,7 @@ with id_tab:
 
             view_col_1, view_col_2 = st.columns(2)
             with view_col_1:
-                view_by = st.selectbox("View by", ["Total activity", "Very active activity", "Fairly active activity", "Light active ctivity"], key="ind_activity", index=1)
+                view_by = st.selectbox("View by", ["Total activity", "Very active activity", "Fairly active activity", "Light active activity"], key="ind_activity", index=1)
 
             row1_col1, row1_col2 = st.columns(2)
             with row1_col1:

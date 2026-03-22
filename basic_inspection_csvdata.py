@@ -1,12 +1,12 @@
 import pandas as pd
 import plotly.express as px
 
-df = pd.read_csv("daily_activity.csv")
+#df = pd.read_csv("daily_activity.csv")
 
 #Count unique users
-unique_users = df["Id"].nunique()
-print(unique_users)
-print(df.describe())
+#unique_users = df["Id"].nunique()
+#print(unique_users)
+#print(df.describe())
 
 def plot_total_distance(df):
     total_distance = df.groupby("Id")["TotalDistance"].sum().reset_index()

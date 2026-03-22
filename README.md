@@ -103,22 +103,22 @@ Daily weather data for Chicago covering March–April 2016, containing 33 featur
 
 ## How to Run
 
-# 1. Clone the repository
+### 1. Clone the repository
 git clone <your-repo-url>
 
-# 2. Navigate to the project folder
+### 2. Navigate to the project folder
 cd Project-Fitbit
 
-# 3. Create a conda environment
+### 3. Create a conda environment
 conda create -n fitbit_env python=3.8.8
 
-# 4. Activate it
+### 4. Activate it
 conda activate fitbit_env
 
-# 5. Install all dependencies
+### 5. Install all dependencies
 pip install -r requirements.txt
 
-# 6. Run the dashboard
+### 6. Run the dashboard
 streamlit run main.py
 
 > Make sure fitbit_database.db is in the root project folder before running.

@@ -17,7 +17,8 @@ The project is divided into 5 parts:
 - Part 5 – Interactive Streamlit dashboard
 
 ## Project Structure
-"""
+
+```
 Project-Fitbit/
 │
 ├── main.py                          # Streamlit dashboard entry point
@@ -54,7 +55,7 @@ Project-Fitbit/
 │
 └── weather_data/
     └── chicago_weather_march_april.csv
-"""
+```
 
 
 

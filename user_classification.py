@@ -12,6 +12,8 @@ import pandas as pd
 import sqlite3
 import matplotlib.pyplot as plt
 import numpy as np
+import plotly.express as px
+import sqlite3
 
 def classify_users(db_path='fitbit_database.db'):
     """
@@ -125,6 +127,28 @@ def get_class_summary_stats(db_path='fitbit_database.db'):
     
     return class_summary
 
+def visualize_user_distribution_pie(df):
+    class_counts = df["Class"].value_counts()
+
+    fig = px.pie(names=class_counts.index, values=class_counts.values,
+                 title="User Distribution by Activity Level")
+    fig.update_traces(pull=[0.05, 0.05, 0.05],
+                      textinfo="percent+label",
+                      textfont=dict(size=11))
+    return fig
+
+def plot_user_count_by_class(df):
+    class_counts = df["Class"].value_counts().reset_index()
+    class_counts.columns = ["Class", "Count"]
+
+    fig = px.bar(class_counts, x="Class", y="Count",
+                 title="User Count by Class",
+                 color="Class",
+                 text="Count")
+    fig.update_traces(textposition="outside")
+    fig.update_yaxes(title_text="Number of Users")
+    fig.update_xaxes(title_text="User Class")
+    return fig
 
 def visualize_user_distribution(db_path='fitbit_database.db'):
     """

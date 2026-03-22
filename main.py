@@ -3,14 +3,14 @@ import os
 from scipy.constants import minute
 from heart_rate import plot_mean_heart_rate, HR_zones_per_group, plot_heart_rate_vs_activity_with_intensity, \
     mean_HR_per_group_compared_to_id
-from user_classification import classify_users
+from user_classification import classify_users, visualize_user_distribution_pie, plot_user_count_by_class
 import pandas as pd
 import sqlite3
-from basic_inspection_csvdata import (plot_total_distance, plot_activity_time_breakdown,
+from basic_inspection_csvdata import (plot_activity_time_breakdown,
                                plot_activity_distance_breakdown, plot_ten_k_steps,
                                plot_days_over_10k)
 from heart_rate import plot_hr_zones, plot_user_data
-from weather import plot_weather_vs_activity, plot_weather_vs_activity_per_id
+from weather import plot_weather_vs_activity
 from calories_regression import plot_regression_calories
 from minutes_distribution import distribution_activity_minutes_for_id
 from activity_logs import plot_global_activity_4_weeks, plot_user_activity_4_weeks, get_5_best_days, plot_user_activity_4_weeks, bar_average_activity_week
@@ -284,7 +284,7 @@ with general_tab:
     with row1_col1:
         plot_global_activity_4_weeks(activity_all_users_df, view_by)
     with row1_col2:
-        st.plotly_chart(plot_ten_k_steps(daily_activity_df), use_container_width=True)
+        st.plotly_chart(visualize_user_distribution_pie(classify_users()), use_container_width=True)
 
     row2_col1, row2_col2 = st.columns(2)
     with row2_col1:
@@ -306,6 +306,12 @@ with general_tab:
         st.plotly_chart(plot_activity_distance_breakdown(activity_distance_df), use_container_width=True)
     with row4_col2:
         st.plotly_chart(plot_activity_time_breakdown(activity_minutes_df), use_container_width=True)
+    
+    row5_col1, row5_col2 = st.columns(2)
+    with row5_col1:
+        st.plotly_chart(plot_ten_k_steps(daily_activity_df), use_container_width=True)
+    with row5_col2:
+        st.plotly_chart(plot_user_count_by_class(classify_users()), use_container_width=True)
 
 with id_tab:
     col1, col2 = st.columns([1, 6])

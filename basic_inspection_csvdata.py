@@ -31,7 +31,7 @@ def plot_activity_time_breakdown(df):
                  barmode="stack",
                  title="Minutes active per User")
     fig.update_yaxes(title_text="Minutes")
-    fig.update_xaxes(title_text="User Id")
+    fig.update_xaxes(title_text="User Id", type= "category")
     return fig
 
 
@@ -66,9 +66,12 @@ def plot_days_over_10k(df):
     ten_k_df = df[df["TotalSteps"] >= 10000]
     ten_k_counts = ten_k_df.groupby("Id")["TotalSteps"].count().reset_index()
     ten_k_counts.columns = ["Id", "DaysOver10k"]
-    ten_k_counts["Id"] = ten_k_counts["Id"].astype(str)
+    ten_k_counts = ten_k_counts.sort_values("DaysOver10k", ascending=False)
 
-    fig = px.pie(ten_k_counts, names="Id", values="DaysOver10k",
-                 title="Days Each User Hit 10k Steps")
+    fig = px.bar(ten_k_counts, x="Id", y="DaysOver10k",
+                 title="Number of Days Each User Reached 10,000 Steps",
+                 labels={"Id": "User Id", "DaysOver10k": "Days Over 10k Steps"})
+    fig.update_yaxes(title_text="Days Over 10k Steps")
+    fig.update_xaxes(title_text="User Id", type="category")
     return fig
 

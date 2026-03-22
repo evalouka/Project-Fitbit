@@ -6,7 +6,10 @@ from heart_rate import plot_mean_heart_rate, HR_zones_per_group, plot_heart_rate
 from user_classification import classify_users
 import pandas as pd
 import sqlite3
-from heart_rate import plot_hr_zones
+from basic_inspection_csvdata import (plot_total_distance, plot_activity_time_breakdown,
+                               plot_activity_distance_breakdown, plot_ten_k_steps,
+                               plot_days_over_10k)
+from heart_rate import plot_hr_zones, plot_user_data
 from weather import plot_weather_vs_activity, plot_weather_vs_activity_per_id
 from calories_regression import plot_regression_calories
 from minutes_distribution import distribution_activity_minutes_for_id
@@ -14,6 +17,7 @@ from activity_logs import plot_global_activity_4_weeks, plot_user_activity_4_wee
 from sleep_activity import individual_sleep_activity_corr, print_sleep_activity_corr
 from calories import plot_user_vs_global_calories
 from sleep import get_users_sleep_minutes, get_average_sleep, total_avg_sleep_per_night, plot_sleep_vs_heartrate
+from weight import plot_weight_trend, average_bmi, get_weight_data
 from step import (
     plot_steps_by_block_general,
     plot_steps_by_block_per_id,
@@ -222,6 +226,16 @@ def load_calories_data():
     df['ActivityDate'] = pd.to_datetime(df['ActivityDate'])
     return df
 
+@st.cache_data
+def load_activity_distance_data():
+    query = """SELECT Id, VeryActiveDistance, ModeratelyActiveDistance, 
+               LightActiveDistance, SedentaryActiveDistance 
+               FROM daily_activity"""
+    df = pd.read_sql_query(query, connection)
+    df["Id"] = df["Id"].round().astype(int).astype(str)
+    return df
+
+activity_distance_df = load_activity_distance_data()
 heart_rate_df = load_hr_data()
 daily_activity_df = load_daily_activity_data()
 hourly_activity_df = load_hourly_activity()
@@ -269,15 +283,17 @@ with general_tab:
     with row1_col1:
         plot_global_activity_4_weeks(activity_all_users_df, view_by)
     with row1_col2:
-        st.write("Ten thousand steps (Eva)")
+        st.plotly_chart(plot_ten_k_steps(daily_activity_df), use_container_width=True)
 
     row2_col1, row2_col2 = st.columns(2)
     with row2_col1:
         plot_steps_by_block_general(hourly_activity_df)
     with row2_col2:
-        st.write("Print 5 best users, or whatever you like (Eva)")
+        st.plotly_chart(plot_days_over_10k(daily_activity_df), use_container_width=True)
 
     row3_col1, row3_col2 = st.columns(2)
+    with row3_col1:
+        st.plotly_chart(plot_activity_distance_breakdown(activity_distance_df), use_container_width=True)
     with row3_col2:
         choose = st.radio("Choose", ["Precipitation", "Temperature"], horizontal=True, key="weather_general")
 
@@ -291,7 +307,7 @@ with id_tab:
     col1, col2 = st.columns([1, 6])
     with col1:
         Id = st.selectbox("Select user", options=sorted(load_unique_id()))
-        section = st.radio("Section", ["General", "Activity", "Sleep", "Heart rate", "Calories", "Intensity"])
+        section = st.radio("Section", ["General", "Activity", "Sleep", "Heart rate", "Calories", "Intensity", "Weight"])
 
     with col2:
         if section == "General":
@@ -495,23 +511,36 @@ with id_tab:
 
             row2_col1, row2_col2 = st.columns(2)
             with row2_col1:
-                st.write("Heart rate vs intensity (Eva)")
+                if heart_rate_df[heart_rate_df["Id"] == Id].empty:
+                    st.info("No heart rate data available for this user.")
+                else:
+                    st.plotly_chart(plot_user_data(Id), use_container_width=True)
             with row2_col2:
                 plot_intensity_by_dow_for_id(intensity_df, Id)
 
         if section == "Weight":
+            weight_data = get_weight_data(Id)
+
             m1, m2, m3, m4 = st.columns(4)
-            m1.metric("Metric1", f"Something")
-            m2.metric("Metric2", f"Something")
-            m3.metric("Metric3", f"Something")
-            m4.metric("3", f"Something")
+            if weight_data.empty:
+                m1.metric("Average Weight", "No data")
+                m2.metric("Average BMI", "No data")
+                m3.metric("Min Weight", "No data")
+                m4.metric("Max Weight", "No data")
+            else:
+                m1.metric("Average Weight", f"{weight_data['WeightKg'].mean():.1f} kg")
+                m2.metric("Average BMI", f"{weight_data['BMI'].mean():.1f}")
+                m3.metric("Min Weight", f"{weight_data['WeightKg'].min():.1f} kg")
+                m4.metric("Max Weight", f"{weight_data['WeightKg'].max():.1f} kg")
 
             row1_col1, row1_col2 = st.columns(2)
             with row1_col1:
-                st.write("BMI for user (Eva)")
+                if weight_data.empty:
+                    st.info("No weight data available for this user.")
+                else:
+                    st.plotly_chart(plot_weight_trend(weight_data), use_container_width=True)
             with row1_col2:
-                st.write("BMI compared to others/general (Eva)")
-
-            row2_col1, row2_col2 = st.columns(2)
-            with row2_col1:
-                st.write("Weight for user (in KG and in Pounds)(Eva)")
+                if weight_data.empty:
+                    st.info("No BMI data available for this user.")
+                else:
+                    st.plotly_chart(average_bmi(Id), use_container_width=True)
